@@ -25,6 +25,55 @@ class Order:
             self.items.append((item, quantity))
         
         self.total += item.price * quantity
+    
+    def remove_item(self, item_id, quantity=1, sub_order_index=None):
+        """
+        從訂單中刪除餐點
+        
+        Parameters:
+        item_id (int): 要刪除的餐點ID
+        quantity (int): 要刪除的數量
+        sub_order_index (int): 如果是分組訂單，指定要從哪個人的訂單中刪除
+        
+        Returns:
+        bool: 是否成功刪除
+        """
+        is_group = len(self.sub_orders) > 0
+        
+        if is_group and sub_order_index is not None:
+            # 檢查子訂單索引是否有效
+            if sub_order_index >= len(self.sub_orders):
+                return False
+                
+            # 在子訂單中尋找該項目
+            for i, (item, item_qty) in enumerate(self.sub_orders[sub_order_index]):
+                if item.id == item_id:
+                    # 如果要刪除的數量小於項目數量，則減少數量
+                    if quantity < item_qty:
+                        self.sub_orders[sub_order_index][i] = (item, item_qty - quantity)
+                        self.total -= item.price * quantity
+                    # 否則刪除整個項目
+                    else:
+                        actual_qty = item_qty  # 實際刪除的數量不超過現有數量
+                        self.sub_orders[sub_order_index].pop(i)
+                        self.total -= item.price * actual_qty
+                    return True
+        else:
+            # 在普通訂單中尋找該項目
+            for i, (item, item_qty) in enumerate(self.items):
+                if item.id == item_id:
+                    # 如果要刪除的數量小於項目數量，則減少數量
+                    if quantity < item_qty:
+                        self.items[i] = (item, item_qty - quantity)
+                        self.total -= item.price * quantity
+                    # 否則刪除整個項目
+                    else:
+                        actual_qty = item_qty  # 實際刪除的數量不超過現有數量
+                        self.items.pop(i)
+                        self.total -= item.price * actual_qty
+                    return True
+        
+        return False  # 找不到項目
 
     def is_group_order(self):
         return len(self.sub_orders) > 0
@@ -287,12 +336,115 @@ class POSView:
 
         self.split_bill_button = ttk.Button(self.button_frame, text="Split Bill")
         self.split_bill_button.pack(side=tk.LEFT, padx=5)
+
+        self.delete_button = ttk.Button(self.button_frame, text="Delete Item")
+        self.delete_button.pack(side=tk.LEFT, padx=5)
         
         # 用來儲存菜單項目部件的字典
         self.menu_item_widgets = {}
 
         # Bind window resize event
         self.root.bind("<Configure>", self.on_window_resize)
+
+        self.order_tree.bind("<<TreeviewSelect>>", self.on_order_item_selected)
+
+    def on_order_item_selected(self, event):
+        """當訂單項目被選中時處理"""
+        # 這個方法可以用來日後添加更多功能，比如顯示項目詳情等
+        pass
+
+    def set_on_delete_button_callback(self, callback):
+        """設置刪除按鈕的回調"""
+        self.delete_button.config(command=callback)
+
+    def on_delete_button_clicked(self):
+            """處理刪除按鈕點擊事件"""
+            # 獲取當前標籤頁
+            current_tab = self.order_notebook.select()
+            
+            # 檢查當前是總訂單還是個人訂單
+            if current_tab == str(self.total_order_frame):
+                # 總訂單頁面
+                selection = self.order_tree.selection()
+                if selection:
+                    item_id = selection[0]
+                    item_name = self.order_tree.item(item_id, 'values')[0]
+                    if hasattr(self, 'on_remove_item_callback'):
+                        self.on_remove_item_callback(item_name)
+            else:
+                # 個人訂單頁面
+                for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
+                    if current_tab == str(tab_data['frame']):
+                        selection = tab_data['tree'].selection()
+                        if selection:
+                            item_id = selection[0]
+                            item_name = tab_data['tree'].item(item_id, 'values')[0]
+                            if hasattr(self, 'on_remove_item_callback'):
+                                self.on_remove_item_callback(item_name, idx)
+                        break  
+
+    def show_order_context_menu(self, event):
+        """顯示訂單項目的右鍵選單"""
+        # 獲取點擊的項目
+        item_id = self.order_tree.identify_row(event.y)
+        if item_id:
+            # 選中被點擊的項目
+            self.order_tree.selection_set(item_id)
+            
+            # 創建右鍵選單
+            context_menu = tk.Menu(self.root, tearoff=0)
+            context_menu.add_command(label="刪除項目", 
+                                command=lambda: self.on_delete_item(item_id))
+            context_menu.add_command(label="減少數量", 
+                                command=lambda: self.on_decrease_quantity(item_id))
+            
+            # 顯示選單
+            context_menu.post(event.x_root, event.y_root)
+
+    def on_delete_item(self, item_id):
+        """刪除訂單中的項目"""
+        if item_id:
+            # 獲取項目名稱
+            item_name = self.order_tree.item(item_id, 'values')[0]
+            
+            # 通過回調通知控制器
+            if hasattr(self, 'on_remove_item_callback'):
+                # 從當前顯示的標籤頁決定是刪除總訂單還是個人訂單
+                current_tab = self.order_notebook.select()
+                
+                if current_tab == str(self.total_order_frame):
+                    # 總訂單頁面
+                    self.on_remove_item_callback(item_name)
+                else:
+                    # 個人訂單頁面
+                    for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
+                        if current_tab == str(tab_data['frame']):
+                            self.on_remove_item_callback(item_name, idx)
+                            break
+
+    def on_decrease_quantity(self, item_id):
+        """減少項目數量"""
+        if item_id:
+            # 獲取項目名稱和當前數量
+            values = self.order_tree.item(item_id, 'values')
+            item_name = values[0]
+            current_qty = int(values[1])
+            
+            if current_qty > 1:
+                # 通過回調通知控制器減少數量
+                if hasattr(self, 'on_decrease_quantity_callback'):
+                    current_tab = self.order_notebook.select()
+                    
+                    if current_tab == str(self.total_order_frame):
+                        self.on_decrease_quantity_callback(item_name)
+                    else:
+                        for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
+                            if current_tab == str(tab_data['frame']):
+                                self.on_decrease_quantity_callback(item_name, idx)
+                                break
+            else:
+                # 如果數量是1，則直接刪除
+                self.on_delete_item(item_id)
 
     def on_window_resize(self, event):
         """Handle window resize to adjust menu layout"""
@@ -562,6 +714,64 @@ class POSView:
                     'tree': person_tree,
                     'drop_frame': person_drop_frame
                 }
+                # 在 update_individual_tabs 方法中，創建 person_tree 後添加
+                person_tree.bind("<<TreeviewSelect>>", self.on_order_item_selected)
+
+    def show_individual_order_context_menu(self, event, tree, person_index):
+        """顯示個人訂單項目的右鍵選單"""
+        item_id = tree.identify_row(event.y)
+        if item_id:
+            tree.selection_set(item_id)
+            
+            context_menu = tk.Menu(self.root, tearoff=0)
+            context_menu.add_command(label="刪除項目", 
+                                command=lambda: self.on_delete_individual_item(item_id, tree, person_index))
+            context_menu.add_command(label="減少數量", 
+                                command=lambda: self.on_decrease_individual_quantity(item_id, tree, person_index))
+            
+            context_menu.post(event.x_root, event.y_root)
+
+    def set_on_remove_item_callback(self, callback):
+        """設置刪除項目的回調"""
+        self.on_remove_item_callback = callback
+
+    def set_on_decrease_quantity_callback(self, callback):
+        """設置減少數量的回調"""
+        self.on_decrease_quantity_callback = callback
+
+    def on_delete_individual_item(self, item_id, tree, person_index):
+        """從個人訂單中刪除項目"""
+        if item_id:
+            # 獲取項目名稱
+            item_name = tree.item(item_id, 'values')[0]
+            
+            # 通過回調通知控制器
+            if hasattr(self, 'on_remove_item_callback'):
+                self.on_remove_item_callback(item_name, person_index)
+
+    def on_decrease_individual_quantity(self, item_id, tree, person_index):
+        """減少個人訂單中的項目數量"""
+        if item_id:
+            # 獲取項目名稱和當前數量
+            values = tree.item(item_id, 'values')
+            item_name = values[0]
+            current_qty = int(values[1])
+            
+            if current_qty > 1:
+                # 通過回調通知控制器減少數量
+                if hasattr(self, 'on_decrease_quantity_callback'):
+                    self.on_decrease_quantity_callback(item_name, person_index)
+            else:
+                # 如果數量是1，則直接刪除
+                self.on_delete_individual_item(item_id, tree, person_index)
+
+    def set_on_remove_item_callback(self, callback):
+        """設置刪除項目的回調"""
+        self.on_remove_item_callback = callback
+
+    def set_on_decrease_quantity_callback(self, callback):
+        """設置減少數量的回調"""
+        self.on_decrease_quantity_callback = callback
 
     def update_order_display(self, order_items, total, split_items=None):
         """Update order display, including total orders and individual orders"""
@@ -667,6 +877,8 @@ class POSController:
         self.view.remove_person_btn.config(command=self.remove_person)
         self.view.selected_category.trace("w", self.on_category_change)
 
+        self.view.set_on_delete_button_callback(self.view.on_delete_button_clicked)
+
         # Initialize order
         self.reset_order()
         
@@ -678,6 +890,50 @@ class POSController:
 
         # Set the callback for category change
         self.view.on_category_change_callback = self.on_category_change
+
+        # 設置刪除項目的回調
+        self.view.set_on_remove_item_callback(self.remove_from_order)
+        self.view.set_on_decrease_quantity_callback(self.decrease_item_quantity)
+
+    def remove_from_order(self, item_name, person_index=None):
+        """從訂單中移除項目"""
+        # 找到對應的菜單項目
+        menu_items = self.model.get_menu_items()
+        target_item = next((item for item in menu_items if item.name == item_name), None)
+        
+        if target_item:
+            # 從訂單中刪除
+            people_count = self.view.people_count.get()
+            
+            if people_count > 1 and person_index is not None:
+                # 從指定人的訂單中刪除
+                self.current_order.remove_item(target_item.id, sub_order_index=person_index)
+            else:
+                # 從總訂單中刪除
+                self.current_order.remove_item(target_item.id)
+                
+            # 更新顯示
+            self.update_all_displays()
+
+    def decrease_item_quantity(self, item_name, person_index=None):
+        """減少項目數量"""
+        # 找到對應的菜單項目
+        menu_items = self.model.get_menu_items()
+        target_item = next((item for item in menu_items if item.name == item_name), None)
+        
+        if target_item:
+            # 從訂單中減少數量（刪除1個）
+            people_count = self.view.people_count.get()
+            
+            if people_count > 1 and person_index is not None:
+                # 從指定人的訂單中減少
+                self.current_order.remove_item(target_item.id, quantity=1, sub_order_index=person_index)
+            else:
+                # 從總訂單中減少
+                self.current_order.remove_item(target_item.id, quantity=1)
+                
+            # 更新顯示
+            self.update_all_displays()
 
     def initialize_menu(self):
         """Initialize menu with categories"""
