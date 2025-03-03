@@ -1,7 +1,6 @@
 # bartender_backend.py
 
 from models import Product
-
 from data_import import (
     import_beers,
     import_beers_bought,
@@ -9,24 +8,55 @@ from data_import import (
     import_payments,
     import_users
 )
+from undo_manager import UndoRedoManager
+from commands import *
 
 # ---------------------
-# Model Classes
+# Model Classes (Order, Employee)
 # ---------------------
 class Order:
     def __init__(self, order_id, table_number):
         self.order_id = order_id
         self.table_number = table_number
         self.items = []  # list of tuples: (Product, quantity)
+        self._undo_stack = []  # Internal stack for undo states
+        self._redo_stack = []  # Internal stack for redo states
+
+    def _save_state(self):
+        """Save a copy of the current items state before modification."""
+        # A shallow copy is enough since Product objects are immutable in this context.
+        self._undo_stack.append(self.items.copy())
+        # Clear the redo stack whenever a new change is made.
+        self._redo_stack.clear()
 
     def add_item(self, product, quantity):
+        self._save_state()
         self.items.append((product, quantity))
+        print(f"Added {quantity} of '{product.name}' to Order {self.order_id}.")
 
     def remove_item(self, product):
+        self._save_state()
         self.items = [item for item in self.items if item[0] != product]
+        print(f"Removed '{product.name}' from Order {self.order_id}.")
 
     def total(self):
         return sum(product.price * quantity for product, quantity in self.items)
+
+    def undo(self):
+        if self._undo_stack:
+            self._redo_stack.append(self.items.copy())
+            self.items = self._undo_stack.pop()
+            print(f"Order {self.order_id} undone. Current items: {self.items}")
+        else:
+            print("No undo available for Order", self.order_id)
+
+    def redo(self):
+        if self._redo_stack:
+            self._undo_stack.append(self.items.copy())
+            self.items = self._redo_stack.pop()
+            print(f"Order {self.order_id} redone. Current items: {self.items}")
+        else:
+            print("No redo available for Order", self.order_id)
 
     def __repr__(self):
         items_str = ", ".join(f"{prod.name} x{qty}" for prod, qty in self.items)
@@ -53,10 +83,12 @@ class Employee:
 # Controller Class for Bartender Functions
 # ---------------------
 class BartenderController:
-    def __init__(self, employee, products_db, orders_db):
+    def __init__(self, employee, orders_db):
         self.employee = employee
-        self.products_db = products_db  # dictionary: product_id -> Product
+        self.products_db = import_beers('DBFilesJSON/dutchman_table_sbl_beer.json')  # dictionary: product_id -> Product
         self.orders_db = orders_db      # dictionary: order_id -> Order
+        self.payments_db = import_payments('DBFilesJSON/dutchman_table_payments.json')
+        self.undo_manager = UndoRedoManager()
 
     def login_employee(self):
         self.employee.login()
@@ -68,35 +100,20 @@ class BartenderController:
         return list(self.products_db.values())
 
     def remove_product_from_menu(self, product_id):
-        if product_id in self.products_db:
-            self.products_db[product_id].available = False
-            print(f"Product '{self.products_db[product_id].name}' removed from menu.")
-        else:
-            print("Product not found.")
+        command = RemoveProductCommand(self.products_db, product_id)
+        self.undo_manager.execute_command(command)
 
-    def modify_product_price(self, product_id, new_price, reason):
-        if product_id in self.products_db:
-            old_price = self.products_db[product_id].price
-            self.products_db[product_id].price = new_price
-            print(f"Price of '{self.products_db[product_id].name}' changed from {old_price} to {new_price}. Reason: {reason}")
-        else:
-            print("Product not found.")
+    def modify_product_price(self, product_id, new_price):
+        command = ModifyPriceCommand(self.products_db, product_id, new_price)
+        self.undo_manager.execute_command(command)
 
-    def offer_discount(self, product_id, discount_percentage, reason):
-        if product_id in self.products_db:
-            product = self.products_db[product_id]
-            discounted_price = round(product.price * (1 - discount_percentage / 100), 2)
-            print(f"Offering discount for '{product.name}': Original Price {product.price}, Discounted Price {discounted_price}. Reason: {reason}")
-            product.price = discounted_price
-        else:
-            print("Product not found.")
+    def offer_discount(self, product_id, discount_percentage):
+        command = OfferDiscountCommand(self.products_db, product_id, discount_percentage)
+        self.undo_manager.execute_command(command)
 
     def update_stock(self, product_id, new_stock):
-        if product_id in self.products_db:
-            self.products_db[product_id].stock_count = new_stock
-            print(f"Stock for '{self.products_db[product_id].name}' updated to {new_stock}.")
-        else:
-            print("Product not found.")
+        command = UpdateStockCommand(self.products_db, product_id, new_stock)
+        self.undo_manager.execute_command(command)
 
     def get_order_for_table(self, table_number):
         for order in self.orders_db.values():
@@ -113,8 +130,16 @@ class BartenderController:
         else:
             print("Order not found.")
 
+    def undo(self):
+        self.undo_manager.undo()
 
-# demo
+    def redo(self):
+        self.undo_manager.redo()
+
+
+# ---------------------
+# Demo
+# ---------------------
 if __name__ == "__main__":
     # Define file paths (adjust as needed)
     beers_bought_file = 'DBFilesJSON/dutchman_table_beers_bought.json'
@@ -130,63 +155,44 @@ if __name__ == "__main__":
     products_db = import_beers(sbl_beers_file)
     users_data = import_users(users_file)
 
-    # # Debug print the imported data
-    # print("Imported Beers Bought:")
-    # print(beers_bought_data)
-    # print("\nImported Beers Sold:")
-    # print(beers_sold_data)
-    # print("\nImported Payments:")
-    # print(payments_data)
-    # print("\nImported Products:")
-    # for product in products_db.values():
-    #     print(product)
-    # print("\nImported Users:")
-    # print(users_data)
-
     # Create a sample orders database for demonstration
-    orders_db = {}
     order1 = Order(101, 1)
-    # Add an item from the imported products (using a sample product id, e.g., 10001)
     sample_product = products_db.get(10001)
     if sample_product:
         order1.add_item(sample_product, 2)
-    orders_db[101] = order1
+    orders_db = import_beers('DBFilesJSON/dutchman_table_sbl_beer.json')
 
     # Create an employee (bartender)
     bartender_employee = Employee(1001, "Alice", "Bartender")
 
     # Instantiate the controller with the employee and imported data
-    controller = BartenderController(bartender_employee, products_db, orders_db)
+    controller = BartenderController(bartender_employee, orders_db)
 
     # Simulate bartender actions:
     controller.login_employee()
 
-    # print("\nAvailable Products:")
-    # for product in controller.view_products():
-    #     print(product)
-
-    # Remove a product from the menu (example)
+    # Remove a product (this action is undoable)
     controller.remove_product_from_menu(10001)
 
-    # Modify product price (example)
-    controller.modify_product_price(10001, 45.0, "Promotional discount due to service delay")
+    # Modify product price (this action is undoable)
+    controller.modify_product_price(10001, 45.0)
 
-    # Offer discount on a product (example)
-    controller.offer_discount(10001, 20, "VIP discount")
+    print("\n--- Demonstrating undo/redo ---")
+    order1.add_item(sample_product, 3)
+    print(order1.__repr__())
+    order1.undo()
+    print(order1.__repr__())
+    order1.redo()
+    print(order1.__repr__())
 
-    # Update stock for a product (example)
-    controller.update_stock(10001, 80)
+    print("\n--- View products ---")
+    controller.view_products()
 
-    # Retrieve and display the order for table 1
-    order = controller.get_order_for_table(1)
-    if order:
-        print("\nOrder Details (Before Update):", order)
+    # Demonstrate undo/redo:
+    print("\n--- Undoing last action ---")
+    controller.undo()
 
-    # Update order: remove the sample product (example)
-    def remove_sample_product(order):
-        order.items = [item for item in order.items if item[0].id != 10001]
-
-    controller.update_order(101, remove_sample_product)
-    print("Order Details (After Update):", orders_db[101])
+    print("\n--- Redoing last undone action ---")
+    controller.redo()
 
     controller.logout_employee()

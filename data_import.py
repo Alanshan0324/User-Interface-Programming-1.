@@ -123,10 +123,10 @@ if __name__ == "__main__":
     print(beers_bought)
     print("\nBeers Sold:")
     print(beers_sold)
-    print("\nPayments:")
-    print(payments)
-    print("\nProducts:")
-    for product in products.values():
-        print(product)
-    print("\nUsers:")
-    print(users)
+    #print("\nPayments:")
+    #print(payments)
+    #print("\nProducts:")
+    #for product in products.values():
+    #    print(product)
+    #print("\nUsers:")
+    #print(users)
