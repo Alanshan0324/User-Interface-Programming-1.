@@ -1,8 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
-import subprocess
 import os
-
+import subprocess
+import sys
 # Predefined user accounts
 USER_CREDENTIALS = {
     "guest": "guest",
@@ -40,9 +40,7 @@ def change_language(*args):
     label_password.config(text=LANGUAGES[current_lang]["password"])
     btn_login.config(text=LANGUAGES[current_lang]["login"])
 
-def logout():
-    frame_main.pack_forget()
-    frame_login.pack()
+
 
 def login():
     username = entry_username.get()
@@ -54,32 +52,20 @@ def login():
     else:
         messagebox.showerror("Login Failed", LANGUAGES[current_lang]["login_failed"])
 
-def show_dashboard(username):
-    global frame_main
-    frame_main = tk.Frame(root, padx=20, pady=20)
-    frame_main.pack()
+
     
-    if username == "guest":
-        label_welcome = tk.Label(frame_main, text=LANGUAGES[current_lang]["guest_welcome"], font=("Arial", 16))
-    elif username == "vipguest":
-        label_welcome = tk.Label(frame_main, text=LANGUAGES[current_lang]["vip_welcome"], font=("Arial", 16))
-    elif username == "admin":
-        label_welcome = tk.Label(frame_main, text=LANGUAGES[current_lang]["admin_welcome"], font=("Arial", 16))
-    """
-    def show_dashboard(username):
+def show_dashboard(username):
     root.withdraw()  
     if username == "guest":
-        subprocess.run(["python", "guest.py"])  
+        subprocess.run([sys.executable, "all_customer_order_interface.py"]) 
     elif username == "vipguest":
-        subprocess.run(["python", "vipguest.py"])
+        subprocess.run([sys.executable, "vip_interface.py"])
     elif username == "admin":
-       subprocess.run(["python", "admin.py"])
+       subprocess.run([sys.executable, "bartender_frontend.py"])
     
-    root.deiconify() 
-    """
-    label_welcome.pack(pady=20)
-    btn_logout = tk.Button(frame_main, text=LANGUAGES[current_lang]["logout"], command=logout)
-    btn_logout.pack(pady=10)
+    root.destroy()
+
+   
 
 # Create the main application window
 root = tk.Tk()

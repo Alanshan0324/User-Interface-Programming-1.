@@ -1,7 +1,7 @@
 # model
+import random
 import tkinter as tk
-from tkinter import messagebox
-import os
+from tkinter import simpledialog, messagebox
 import subprocess
 import sys
 class MenuItem:
@@ -30,55 +30,6 @@ class Order:
             self.items.append((item, quantity))
         
         self.total += item.price * quantity
-    
-    def remove_item(self, item_id, quantity=1, sub_order_index=None):
-        """
-        從訂單中刪除餐點
-        
-        Parameters:
-        item_id (int): 要刪除的餐點ID
-        quantity (int): 要刪除的數量
-        sub_order_index (int): 如果是分組訂單，指定要從哪個人的訂單中刪除
-        
-        Returns:
-        bool: 是否成功刪除
-        """
-        is_group = len(self.sub_orders) > 0
-        
-        if is_group and sub_order_index is not None:
-            # 檢查子訂單索引是否有效
-            if sub_order_index >= len(self.sub_orders):
-                return False
-                
-            # 在子訂單中尋找該項目
-            for i, (item, item_qty) in enumerate(self.sub_orders[sub_order_index]):
-                if item.id == item_id:
-                    # 如果要刪除的數量小於項目數量，則減少數量
-                    if quantity < item_qty:
-                        self.sub_orders[sub_order_index][i] = (item, item_qty - quantity)
-                        self.total -= item.price * quantity
-                    # 否則刪除整個項目
-                    else:
-                        actual_qty = item_qty  # 實際刪除的數量不超過現有數量
-                        self.sub_orders[sub_order_index].pop(i)
-                        self.total -= item.price * actual_qty
-                    return True
-        else:
-            # 在普通訂單中尋找該項目
-            for i, (item, item_qty) in enumerate(self.items):
-                if item.id == item_id:
-                    # 如果要刪除的數量小於項目數量，則減少數量
-                    if quantity < item_qty:
-                        self.items[i] = (item, item_qty - quantity)
-                        self.total -= item.price * quantity
-                    # 否則刪除整個項目
-                    else:
-                        actual_qty = item_qty  # 實際刪除的數量不超過現有數量
-                        self.items.pop(i)
-                        self.total -= item.price * actual_qty
-                    return True
-        
-        return False  # 找不到項目
 
     def is_group_order(self):
         return len(self.sub_orders) > 0
@@ -105,11 +56,32 @@ class Order:
                 all_items.extend(sub_order)
             return all_items
         return self.items
+class SpecialLocker:
+    def __init__(self):
+        self.lock_code = self.generate_code()
+
+    def generate_code(self):
+        return random.randint(1000, 9999)  # 生成 4 位數密碼
+
+    def verify_code(self, code):
+        return code == self.lock_code
+
+    def update_code(self):
+        self.lock_code = self.generate_code()  # 成功購買後更新密碼
+    def unlock(self):
+        # 假設你從輸入框中獲取用戶輸入的密碼
+        entered_code = int(self.unlock_entry.get())
+        if self.verify_code(entered_code):
+            print("解鎖成功！")
+        else:
+            print("密碼錯誤！")
 
 
 class MenuModel:
     def __init__(self):
         # Sample menu data
+        self.vip_account = 100.00
+        self.locker = SpecialLocker()
         self.menu_items = [
             # Alcoholic Drinks
             MenuItem(1, "Draft Beer", 6.00, "Alcoholic Drinks"),
@@ -191,7 +163,17 @@ class MenuModel:
             MenuItem(67, "Strawberry Shortcake", 8.50, "Desserts"),
             MenuItem(68, "Carrot Cake", 7.50, "Desserts"),
             MenuItem(69, "Banoffee Pie", 9.00, "Desserts"),
-            MenuItem(70, "Chocolate Brownie", 8.00, "Desserts")
+            MenuItem(70, "Chocolate Brownie", 8.00, "Desserts"),
+
+            #special menu
+            MenuItem(71, "Lobster Bisque", 30.00, "Special Menu"),
+            MenuItem(72, "Foie Gras", 35.00, "Special Menu"),
+            MenuItem(73, "Black Truffle Risotto", 60.00, "Special Menu"),
+            MenuItem(74, "Gold Leaf Dessert", 55.00, "Special Menu"),          
+        
+
+
+
         ]
     def get_menu_items(self):
         return self.menu_items
@@ -206,7 +188,7 @@ from tkinter import ttk, messagebox
 class POSView:
     def __init__(self, root):
         self.root = root
-        self.root.title("Bar POS System")
+        self.root.title("VIP POS System")
         self.root.geometry("1430x600")
         
         # 設定列權重來控制左右兩邊的比例
@@ -325,10 +307,28 @@ class POSView:
         # 個人訂單框架 (將動態填充)
         self.individual_trees = {}  # 儲存每個人的樹狀視圖
         
-        # 總計標籤
-        self.total_label = ttk.Label(self.order_frame, text="Total: $0.00", font=('Arial', 14))
-        self.total_label.pack(pady=10)
         
+        # 創建一個 Frame 來容納這四個元件
+        self.total_frame = ttk.Frame(self.order_frame)
+        self.total_frame.pack(pady=10)
+
+        # 總計標籤
+        self.total_label = ttk.Label(self.total_frame, text="Total: $0.00", font=('Arial', 14))
+        self.total_label.pack(side="left", padx=10)
+
+        # Locker Code Label（顯示密碼）
+        self.locker_code_label = ttk.Label(self.total_frame, text="Locker Code: Hidden", font=('Arial', 12))
+        self.locker_code_label.pack(side="left", padx=10)
+
+        # 密碼輸入框
+        self.unlock_entry = ttk.Entry(self.total_frame, show="*")
+        self.unlock_entry.pack(side="left", padx=10)
+
+        # 解鎖按鈕
+        self.unlock_button = ttk.Button(self.total_frame, text="Unlock Fridge")
+        self.unlock_button.pack(side="left", padx=10)
+
+       
         # 按鈕
         self.button_frame = ttk.Frame(self.order_frame)
         self.button_frame.pack(fill=tk.X, pady=5)
@@ -342,117 +342,30 @@ class POSView:
         self.split_bill_button = ttk.Button(self.button_frame, text="Split Bill")
         self.split_bill_button.pack(side=tk.LEFT, padx=5)
 
-        self.delete_button = ttk.Button(self.button_frame, text="Delete Item")
-        self.delete_button.pack(side=tk.LEFT, padx=5)
+        self.vip_balance_button = ttk.Button(self.button_frame, text=" Show VIP balance")
+        self.vip_balance_button.pack(side=tk.LEFT, padx=5)
+        
+        self.pay_from_account_button = ttk.Button(self.button_frame, text="Pay from account")
+        self.pay_from_account_button.pack(side=tk.LEFT, padx=5)
 
-        self.logout_button = ttk.Button(self.button_frame, text=" Log out")
+        self.topup_button = ttk.Button(self.button_frame, text="Top up account")
+        self.topup_button.pack(side=tk.LEFT, padx=5)
+
+        self.logout_button = ttk.Button(self.button_frame, text=" log out")
         self.logout_button.pack(side=tk.LEFT, padx=5)
+
+        
+
+
         
         # 用來儲存菜單項目部件的字典
         self.menu_item_widgets = {}
 
         # Bind window resize event
         self.root.bind("<Configure>", self.on_window_resize)
-
-        self.order_tree.bind("<<TreeviewSelect>>", self.on_order_item_selected)
-
-    def on_order_item_selected(self, event):
-        """當訂單項目被選中時處理"""
-        # 這個方法可以用來日後添加更多功能，比如顯示項目詳情等
-        pass
-
-    def set_on_delete_button_callback(self, callback):
-        """設置刪除按鈕的回調"""
-        self.delete_button.config(command=callback)
-
-    def on_delete_button_clicked(self):
-            """處理刪除按鈕點擊事件"""
-            # 獲取當前標籤頁
-            current_tab = self.order_notebook.select()
-            
-            # 檢查當前是總訂單還是個人訂單
-            if current_tab == str(self.total_order_frame):
-                # 總訂單頁面
-                selection = self.order_tree.selection()
-                if selection:
-                    item_id = selection[0]
-                    item_name = self.order_tree.item(item_id, 'values')[0]
-                    if hasattr(self, 'on_remove_item_callback'):
-                        self.on_remove_item_callback(item_name)
-            else:
-                # 個人訂單頁面
-                for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
-                    if current_tab == str(tab_data['frame']):
-                        selection = tab_data['tree'].selection()
-                        if selection:
-                            item_id = selection[0]
-                            item_name = tab_data['tree'].item(item_id, 'values')[0]
-                            if hasattr(self, 'on_remove_item_callback'):
-                                self.on_remove_item_callback(item_name, idx)
-                        break  
-
-    def show_order_context_menu(self, event):
-        """顯示訂單項目的右鍵選單"""
-        # 獲取點擊的項目
-        item_id = self.order_tree.identify_row(event.y)
-        if item_id:
-            # 選中被點擊的項目
-            self.order_tree.selection_set(item_id)
-            
-            # 創建右鍵選單
-            context_menu = tk.Menu(self.root, tearoff=0)
-            context_menu.add_command(label="刪除項目", 
-                                command=lambda: self.on_delete_item(item_id))
-            context_menu.add_command(label="減少數量", 
-                                command=lambda: self.on_decrease_quantity(item_id))
-            
-            # 顯示選單
-            context_menu.post(event.x_root, event.y_root)
-
-    def on_delete_item(self, item_id):
-        """刪除訂單中的項目"""
-        if item_id:
-            # 獲取項目名稱
-            item_name = self.order_tree.item(item_id, 'values')[0]
-            
-            # 通過回調通知控制器
-            if hasattr(self, 'on_remove_item_callback'):
-                # 從當前顯示的標籤頁決定是刪除總訂單還是個人訂單
-                current_tab = self.order_notebook.select()
-                
-                if current_tab == str(self.total_order_frame):
-                    # 總訂單頁面
-                    self.on_remove_item_callback(item_name)
-                else:
-                    # 個人訂單頁面
-                    for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
-                        if current_tab == str(tab_data['frame']):
-                            self.on_remove_item_callback(item_name, idx)
-                            break
-
-    def on_decrease_quantity(self, item_id):
-        """減少項目數量"""
-        if item_id:
-            # 獲取項目名稱和當前數量
-            values = self.order_tree.item(item_id, 'values')
-            item_name = values[0]
-            current_qty = int(values[1])
-            
-            if current_qty > 1:
-                # 通過回調通知控制器減少數量
-                if hasattr(self, 'on_decrease_quantity_callback'):
-                    current_tab = self.order_notebook.select()
-                    
-                    if current_tab == str(self.total_order_frame):
-                        self.on_decrease_quantity_callback(item_name)
-                    else:
-                        for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
-                            if current_tab == str(tab_data['frame']):
-                                self.on_decrease_quantity_callback(item_name, idx)
-                                break
-            else:
-                # 如果數量是1，則直接刪除
-                self.on_delete_item(item_id)
+    def update_locker_code(self, code):
+        """更新 UI 顯示的密碼"""
+        self.locker_code_label.config(text=f"Locker Code: {code}")
 
     def on_window_resize(self, event):
         """Handle window resize to adjust menu layout"""
@@ -722,64 +635,6 @@ class POSView:
                     'tree': person_tree,
                     'drop_frame': person_drop_frame
                 }
-                # 在 update_individual_tabs 方法中，創建 person_tree 後添加
-                person_tree.bind("<<TreeviewSelect>>", self.on_order_item_selected)
-
-    def show_individual_order_context_menu(self, event, tree, person_index):
-        """顯示個人訂單項目的右鍵選單"""
-        item_id = tree.identify_row(event.y)
-        if item_id:
-            tree.selection_set(item_id)
-            
-            context_menu = tk.Menu(self.root, tearoff=0)
-            context_menu.add_command(label="刪除項目", 
-                                command=lambda: self.on_delete_individual_item(item_id, tree, person_index))
-            context_menu.add_command(label="減少數量", 
-                                command=lambda: self.on_decrease_individual_quantity(item_id, tree, person_index))
-            
-            context_menu.post(event.x_root, event.y_root)
-
-    def set_on_remove_item_callback(self, callback):
-        """設置刪除項目的回調"""
-        self.on_remove_item_callback = callback
-
-    def set_on_decrease_quantity_callback(self, callback):
-        """設置減少數量的回調"""
-        self.on_decrease_quantity_callback = callback
-
-    def on_delete_individual_item(self, item_id, tree, person_index):
-        """從個人訂單中刪除項目"""
-        if item_id:
-            # 獲取項目名稱
-            item_name = tree.item(item_id, 'values')[0]
-            
-            # 通過回調通知控制器
-            if hasattr(self, 'on_remove_item_callback'):
-                self.on_remove_item_callback(item_name, person_index)
-
-    def on_decrease_individual_quantity(self, item_id, tree, person_index):
-        """減少個人訂單中的項目數量"""
-        if item_id:
-            # 獲取項目名稱和當前數量
-            values = tree.item(item_id, 'values')
-            item_name = values[0]
-            current_qty = int(values[1])
-            
-            if current_qty > 1:
-                # 通過回調通知控制器減少數量
-                if hasattr(self, 'on_decrease_quantity_callback'):
-                    self.on_decrease_quantity_callback(item_name, person_index)
-            else:
-                # 如果數量是1，則直接刪除
-                self.on_delete_individual_item(item_id, tree, person_index)
-
-    def set_on_remove_item_callback(self, callback):
-        """設置刪除項目的回調"""
-        self.on_remove_item_callback = callback
-
-    def set_on_decrease_quantity_callback(self, callback):
-        """設置減少數量的回調"""
-        self.on_decrease_quantity_callback = callback
 
     def update_order_display(self, order_items, total, split_items=None):
         """Update order display, including total orders and individual orders"""
@@ -874,6 +729,8 @@ class POSController:
         self.view = view
         self.root = view.root
         self.current_order = Order()
+        self.update_locker_code()
+        
 
         # Set callback for adding items through drag and drop
         self.view.set_on_add_item_callback(self.add_to_order_drag_drop)
@@ -884,10 +741,15 @@ class POSController:
         self.view.split_bill_button.config(command=self.split_bill)
         self.view.add_person_btn.config(command=self.add_person)
         self.view.remove_person_btn.config(command=self.remove_person)
-        self.view.logout_button.config(command=self.logout)
         self.view.selected_category.trace("w", self.on_category_change)
-
-        self.view.set_on_delete_button_callback(self.view.on_delete_button_clicked)
+        self.view.vip_balance_button.config(command=self.vip_balance)
+        self.view.pay_from_account_button.config(command=self.pay_from_account)
+        self.view.unlock_button.config(command=self.unlock_fridge)
+        self.view.topup_button.config(command=self.topup_account)
+        self.view.logout_button.config(command=self.logout)
+     
+        
+        
 
         # Initialize order
         self.reset_order()
@@ -900,50 +762,32 @@ class POSController:
 
         # Set the callback for category change
         self.view.on_category_change_callback = self.on_category_change
+    def unlock_fridge(self):
+        """驗證組合鎖密碼，正確則更新密碼"""
+        code = self.view.unlock_entry.get()
+        vip_account = self.model.vip_account
 
-        # 設置刪除項目的回調
-        self.view.set_on_remove_item_callback(self.remove_from_order)
-        self.view.set_on_decrease_quantity_callback(self.decrease_item_quantity)
+        if not code.isdigit():
+            self.view.show_message("Please enter a valid 4-digit code.")
+            return
 
-    def remove_from_order(self, item_name, person_index=None):
-        """從訂單中移除項目"""
-        # 找到對應的菜單項目
-        menu_items = self.model.get_menu_items()
-        target_item = next((item for item in menu_items if item.name == item_name), None)
+        if self.model.locker.verify_code(int(code)):
+           
         
-        if target_item:
-            # 從訂單中刪除
-            people_count = self.view.people_count.get()
-            
-            if people_count > 1 and person_index is not None:
-                # 從指定人的訂單中刪除
-                self.current_order.remove_item(target_item.id, sub_order_index=person_index)
+            if self.model.vip_account >= 20:
+                self.model.vip_account -= 20
+                self.view.show_message(f"Unlocked! Enjoy your drink. Remaining balance: {self.model.vip_account} USD")
+                self.model.locker.update_code()  # 成功後變更密碼
+                self.update_locker_code()  # 更新顯示的新密碼
             else:
-                # 從總訂單中刪除
-                self.current_order.remove_item(target_item.id)
-                
-            # 更新顯示
-            self.update_all_displays()
+                self.view.show_message(f"Not enough balance! Remaining balance: {self.model.vip_account} USD. Please add more.")
+        else:
+            self.view.show_message("Wrong code! Try again.")
+    def update_locker_code(self):
+        """更新 UI 上的密碼顯示"""
+        new_code = self.model.locker.lock_code
+        self.view.update_locker_code(new_code)
 
-    def decrease_item_quantity(self, item_name, person_index=None):
-        """減少項目數量"""
-        # 找到對應的菜單項目
-        menu_items = self.model.get_menu_items()
-        target_item = next((item for item in menu_items if item.name == item_name), None)
-        
-        if target_item:
-            # 從訂單中減少數量（刪除1個）
-            people_count = self.view.people_count.get()
-            
-            if people_count > 1 and person_index is not None:
-                # 從指定人的訂單中減少
-                self.current_order.remove_item(target_item.id, quantity=1, sub_order_index=person_index)
-            else:
-                # 從總訂單中減少
-                self.current_order.remove_item(target_item.id, quantity=1)
-                
-            # 更新顯示
-            self.update_all_displays()
 
     def initialize_menu(self):
         """Initialize menu with categories"""
@@ -1039,6 +883,35 @@ class POSController:
 
         self.view.show_message(f"Order{table_info}{group_info} completed! Total: ${self.current_order.total:.2f}")
         self.clear_order()
+    def vip_balance(self):
+        """檢查 VIP 餘額並顯示"""
+        
+        self.view.show_message(f"Your VIP balance is: ${self.model.vip_account:.2f}")
+    
+    def pay_from_account(self):
+        if not self.current_order.get_all_items():
+            self.view.show_message("The order is empty")
+            return
+
+        total_cost = sum(item.price * qty for item, qty in self.current_order.get_all_items())
+        
+        if self.model.vip_account >= total_cost:
+            self.model.vip_account -= total_cost
+            table_info = f" for table {self.current_order.table_number}" if self.current_order.table_number else ""
+            group_info = " (Group order)" if self.current_order.is_group_order() else ""
+            
+            self.view.show_message(f"Order{table_info}{group_info} completed! Total: ${total_cost:.2f}Remaining VIP balance: ${self.model.vip_account:.2f}")
+            self.clear_order()
+        else:
+            self.view.show_message("Insufficient VIP balance!")
+    def topup_account(self):
+
+        amount = simpledialog.askinteger("Top-up", "Enter amount to top-up:", minvalue=1)
+        
+        if amount is not None:  # 確保用戶沒有點擊取消
+            self.model.vip_account += amount  # 增加餘額
+           
+            messagebox.showinfo("Success", f"Recharged!\n New Balance: {self.model.vip_account} USD")
     def logout(self):
         """登出並回到登入介面"""
         confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
@@ -1048,7 +921,6 @@ class POSController:
             self.root.quit()  # 結束 Tkinter 事件循環
             self.root.destroy()  # 銷毀 Tkinter 主視窗
             subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
-
 
 # main
 def main():

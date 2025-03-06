@@ -1,7 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 from bartender_backend import BartenderController, Employee
-
+import subprocess
+import sys
 
 class BartenderFrontend:
     def __init__(self, controller):
@@ -128,6 +129,9 @@ class BartenderFrontend:
         row += 1
         self.order_listbox = tk.Listbox(self.control_frame)
         self.order_listbox.grid(row=row, column=0, sticky="nsew", padx=5, pady=2);
+        row += 1
+        tk.Button(self.control_frame, text="Log out", command=self.logout).grid(row=row, column=0, sticky="ew",
+                                                                                       padx=5, pady=2);
         row += 1
 
         self.status_label = tk.Label(self.control_frame, text="", fg="blue")
@@ -284,6 +288,16 @@ class BartenderFrontend:
 
     def run(self):
         self.root.mainloop()
+    def logout(self):
+        """登出並回到登入介面"""
+        confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
+        if confirm:
+            
+   
+            self.root.quit()  # 結束 Tkinter 事件循環
+            self.root.destroy()  # 銷毀 Tkinter 主視窗
+            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
+
 
 
 if __name__ == "__main__":
