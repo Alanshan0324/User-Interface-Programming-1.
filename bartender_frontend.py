@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from bartender_backend import BartenderController, Employee
-import subprocess
-import sys
+
 
 class BartenderFrontend:
     def __init__(self, controller):
@@ -20,15 +19,22 @@ class BartenderFrontend:
         self.product_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         self.product_frame.rowconfigure(1, weight=1)
         self.product_frame.columnconfigure(0, weight=1)
+        self.product_frame.columnconfigure(1, weight=1)
 
         tk.Label(self.product_frame, text="Products", font=("Helvetica", 14)).grid(row=0, column=0, sticky="w", padx=5,
                                                                                    pady=5)
+        self.sort_var = tk.StringVar(value="Name")
+        tk.Label(self.product_frame, text="Sort by:").grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        sort_options = ["Name", "Price", "Stock", "Availability"]
+        self.sort_menu = tk.OptionMenu(self.product_frame, self.sort_var, *sort_options,
+                                       command=lambda _: self.refresh_products())
+        self.sort_menu.grid(row=0, column=1, sticky="e", padx=5, pady=5)
+
         self.product_listbox = tk.Listbox(self.product_frame)
-        self.product_listbox.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        self.product_listbox.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
         self.product_listbox.bind("<<ListboxSelect>>", self.on_product_select)
-        tk.Button(self.product_frame, text="Refresh Products", command=self.refresh_products).grid(row=2, column=0,
-                                                                                                   sticky="ew", padx=5,
-                                                                                                   pady=5)
+        tk.Button(self.product_frame, text="Refresh Products", command=self.refresh_products) \
+            .grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
         # --- Control Frame ---
         self.control_frame = tk.Frame(self.root, bd=2, relief=tk.SUNKEN)
@@ -49,13 +55,12 @@ class BartenderFrontend:
         self.entry_new_price = tk.Entry(self.control_frame)
         self.entry_new_price.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Modify Price", command=self.modify_price).grid(row=row, column=0,
-                                                                                           sticky="ew", padx=5, pady=2);
+        tk.Button(self.control_frame, text="Modify Price", command=self.modify_price) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Button(self.control_frame, text="Remove Product", command=self.remove_product).grid(row=row, column=0,
-                                                                                               sticky="ew", padx=5,
-                                                                                               pady=2);
+        tk.Button(self.control_frame, text="Remove Product", command=self.remove_product) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         tk.Label(self.control_frame, text="New Stock:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
@@ -63,34 +68,42 @@ class BartenderFrontend:
         self.entry_new_stock = tk.Entry(self.control_frame)
         self.entry_new_stock.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Update Stock", command=self.update_stock).grid(row=row, column=0,
-                                                                                           sticky="ew", padx=5, pady=2);
+        tk.Button(self.control_frame, text="Update Stock", command=self.update_stock) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Button(self.control_frame, text="Undo (Global)", command=self.undo).grid(row=row, column=0, sticky="ew",
-                                                                                    padx=5, pady=2);
+        tk.Button(self.control_frame, text="Undo (Global)", command=self.undo) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Redo (Global)", command=self.redo).grid(row=row, column=0, sticky="ew",
-                                                                                    padx=5, pady=2);
+        tk.Button(self.control_frame, text="Redo (Global)", command=self.redo) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        row += 1
+
+        # Refill Low Stock Items Button
+        tk.Button(self.control_frame, text="Refill Low Stock Items", command=self.refill_low_stock) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        row += 1
+
+        # Alert security
+        tk.Button(self.control_frame, text="Alert Security", command=self.alert_security) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         # --- Order Management Controls ---
-        tk.Label(self.control_frame, text="--- Order Management ---", fg="darkgreen").grid(row=row, column=0,
-                                                                                           sticky="w", padx=5, pady=5);
+        tk.Label(self.control_frame, text="--- Order Management ---", fg="darkgreen") \
+            .grid(row=row, column=0, sticky="w", padx=5, pady=5);
         row += 1
-        tk.Button(self.control_frame, text="Create New Order", command=self.create_order).grid(row=row, column=0,
-                                                                                               sticky="ew", padx=5,
-                                                                                               pady=2);
+        tk.Button(self.control_frame, text="Create New Order", command=self.create_order) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="Quantity to Add:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        tk.Label(self.control_frame, text="Quantity:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
         self.entry_quantity = tk.Entry(self.control_frame)
         self.entry_quantity.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Add Item to Order", command=self.add_item_to_order).grid(row=row, column=0,
-                                                                                                     sticky="ew",
-                                                                                                     padx=5, pady=2);
+        tk.Button(self.control_frame, text="Add Item to Order", command=self.add_item_to_order) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         tk.Label(self.control_frame, text="Quantity to Remove:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
@@ -98,40 +111,25 @@ class BartenderFrontend:
         self.entry_remove_quantity = tk.Entry(self.control_frame)
         self.entry_remove_quantity.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Remove Item from Order", command=self.remove_item_from_order).grid(row=row,
-                                                                                                               column=0,
-                                                                                                               sticky="ew",
-                                                                                                               padx=5,
-                                                                                                               pady=2);
+        tk.Button(self.control_frame, text="Remove Item from Order", command=self.remove_item_from_order) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="Order Discount (%):").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        tk.Button(self.control_frame, text="Finish Order", command=self.finish_order) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        self.entry_order_discount = tk.Entry(self.control_frame)
-        self.entry_order_discount.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        tk.Button(self.control_frame, text="Order Undo", command=self.order_undo) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Apply Discount to Order Item", command=self.offer_discount_on_order).grid(
-            row=row, column=0, sticky="ew", padx=5, pady=2);
-        row += 1
-
-        tk.Button(self.control_frame, text="Finish Order", command=self.finish_order).grid(row=row, column=0,
-                                                                                           sticky="ew", padx=5, pady=2);
-        row += 1
-        tk.Button(self.control_frame, text="Order Undo", command=self.order_undo).grid(row=row, column=0, sticky="ew",
-                                                                                       padx=5, pady=2);
-        row += 1
-        tk.Button(self.control_frame, text="Order Redo", command=self.order_redo).grid(row=row, column=0, sticky="ew",
-                                                                                       padx=5, pady=2);
+        tk.Button(self.control_frame, text="Order Redo", command=self.order_redo) \
+            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="Current Order:", fg="purple").grid(row=row, column=0, sticky="w", padx=5,
-                                                                              pady=5);
+        tk.Label(self.control_frame, text="Current Order:", fg="purple") \
+            .grid(row=row, column=0, sticky="w", padx=5, pady=5);
         row += 1
         self.order_listbox = tk.Listbox(self.control_frame)
         self.order_listbox.grid(row=row, column=0, sticky="nsew", padx=5, pady=2);
-        row += 1
-        tk.Button(self.control_frame, text="Log out", command=self.logout).grid(row=row, column=0, sticky="ew",
-                                                                                       padx=5, pady=2);
         row += 1
 
         self.status_label = tk.Label(self.control_frame, text="", fg="blue")
@@ -142,9 +140,20 @@ class BartenderFrontend:
 
     def refresh_products(self):
         self.product_listbox.delete(0, tk.END)
-        for pid in self.controller.get_product_ids():
-            p = self.controller.get_product(pid)
-            text = f"ID: {p.id} | {p.name} | Price: {p.price} | Stock: {p.stock_count} | Available: {p.available}"
+        products = [self.controller.get_product(pid) for pid in self.controller.get_product_ids()]
+        sort_option = self.sort_var.get()
+        if sort_option == "Name":
+            products = sorted(products, key=lambda p: p.name.lower())
+        elif sort_option == "Price":
+            products = sorted(products, key=lambda p: p.price)
+        elif sort_option == "Stock":
+            products = sorted(products, key=lambda p: p.stock_count, reverse=True)
+        elif sort_option == "Availability":
+            products = sorted(products, key=lambda p: not p.available)
+
+        for p in products:
+            warning = " *** LOW STOCK ***" if p.stock_count < 5 else ""
+            text = f"ID: {p.id} | {p.name} | Price: {p.price} | Stock: {p.stock_count} | Available: {p.available}{warning}"
             self.product_listbox.insert(tk.END, text)
 
     def refresh_order(self):
@@ -194,20 +203,6 @@ class BartenderFrontend:
                 self.refresh_products()
             except ValueError:
                 messagebox.showerror("Error", "Product ID must be integer and price must be a number.")
-
-    def offer_discount_on_order(self):
-        product_id_str = self.entry_product_id.get()
-        discount_str = self.entry_order_discount.get()
-        if product_id_str and discount_str:
-            try:
-                product_id = int(product_id_str)
-                discount = float(discount_str)
-                self.controller.offer_discount_on_order(product_id, discount)
-                self.status_label.config(
-                    text=f"Applied discount of {discount}% on order item for product {product_id}.")
-                self.refresh_order()
-            except ValueError:
-                messagebox.showerror("Error", "Product ID must be integer and discount must be a number.")
 
     def update_stock(self):
         product_id_str = self.entry_product_id.get()
@@ -286,18 +281,20 @@ class BartenderFrontend:
         self.status_label.config(text="Redid last order change.")
         self.refresh_order()
 
+    def do_accounting(self):
+        summary = self.controller.do_accounting()
+        messagebox.showinfo("Accounting Summary", summary)
+
+    def refill_low_stock(self):
+        count = self.controller.refill_low_stock_items()
+        self.status_label.config(text=f"Refilled {count} items with low stock.")
+        self.refresh_products()
+
+    def alert_security(self):
+        self.status_label.config(text="Security alert sent.")
+
     def run(self):
         self.root.mainloop()
-    def logout(self):
-        """登出並回到登入介面"""
-        confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
-        if confirm:
-            
-   
-            self.root.quit()  # 結束 Tkinter 事件循環
-            self.root.destroy()  # 銷毀 Tkinter 主視窗
-            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
-
 
 
 if __name__ == "__main__":

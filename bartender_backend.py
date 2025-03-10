@@ -135,6 +135,45 @@ class BartenderController:
         command = UpdateStockCommand(self.products_db, product_id, new_stock)
         self.undo_manager.execute_command(command)
 
+    def do_accounting(self):
+        """
+        Perform a simple accounting simulation:
+         - Total cost from beers bought (sum of amount * price)
+         - Total payments from table payments
+         - Total number of beers sold (count of records)
+         - Net revenue = total payments - total cost
+        """
+        beers_bought = import_beers_bought('DBFilesJSON/dutchman_table_beers_bought.json')
+        beers_sold = import_beers_sold('DBFilesJSON/dutchman_table_beers_sold.json')
+        payments = import_payments('DBFilesJSON/dutchman_table_payments.json')
+
+        total_cost = sum(entry['amount'] * entry['price'] for entry in beers_bought)
+        total_payments = sum(entry['amount'] for entry in payments)
+        total_beers_sold = len(beers_sold)
+        net_revenue = total_payments - total_cost
+
+        summary = (
+            f"Total Cost (Beers Bought): {total_cost:.2f}\n"
+            f"Total Payments: {total_payments:.2f}\n"
+            f"Total Beers Sold: {total_beers_sold}\n"
+            f"Net Revenue: {net_revenue:.2f}"
+        )
+        return summary
+
+    def refill_low_stock_items(self, refill_amount=100):
+        """
+        Refill all products that have a stock lower than 5.
+        Sets stock_count to refill_amount (default 100) for those products.
+        Returns the count of products refilled.
+        """
+        count = 0
+        for product in self.products_db.values():
+            if product.stock_count < 5:
+                product.stock_count = refill_amount
+                count += 1
+        print(f"Refilled {count} items with low stock.")
+        return count
+
     # --- Order functions ---
     def create_order(self):
         if self.current_order is None:
