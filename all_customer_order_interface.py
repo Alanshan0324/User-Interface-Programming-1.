@@ -356,8 +356,18 @@ class POSView:
         self.root = root
         self.root.title("Bar POS System")
         self.root.geometry("1430x600")
+        self.root.minsize(600, 400)  # Set minimum window size
         
         self.language_model = language_model
+        
+        # Define breakpoints for responsive design
+        self.breakpoints = {
+            "mobile": 800,    # Mobile layout below 800px width
+            "tablet": 1200    # Tablet layout between 800px and 1200px width
+        }
+        
+        # Track current layout
+        self.current_layout = "desktop"  # Default layout
         
         # Set column weights to control the proportions of the left and right sides
         root.columnconfigure(0, weight=4)  # Menu 4/5
@@ -599,7 +609,7 @@ class POSView:
     def on_delete_button_clicked(self):
         current_tab = self.order_notebook.select()
         
-        #Check whether the current order is a general order or a personal order
+        # Check whether the current order is a general order or a personal order
         if current_tab == str(self.total_order_frame):
             # Total Order Page
             selection = self.order_tree.selection()
@@ -684,16 +694,141 @@ class POSView:
                 self.on_delete_item(item_id)
 
     def on_window_resize(self, event):
-        """Handle window resize to adjust menu layout"""
+        """Handle window resize events to apply responsive layout"""
         # Only process events from the root window, not child widgets
         if event.widget == self.root:
-            # If the window width has significantly changed, re-layout the menu
-            # Get current selected category
-            current_category = self.selected_category.get()
+            width = event.width
             
-            # Trigger category change to rebuild the menu with the current category
-            # We wait a short time to ensure the window resize is complete
+            # Determine the layout based on window width
+            if width < self.breakpoints["mobile"] and self.current_layout != "mobile":
+                self.apply_mobile_layout()
+                self.current_layout = "mobile"
+            elif width >= self.breakpoints["mobile"] and width < self.breakpoints["tablet"] and self.current_layout != "tablet":
+                self.apply_tablet_layout()
+                self.current_layout = "tablet"
+            elif width >= self.breakpoints["tablet"] and self.current_layout != "desktop":
+                self.apply_desktop_layout()
+                self.current_layout = "desktop"
+            
+            # Rebuild menu with current category
+            current_category = self.selected_category.get()
             self.root.after(100, lambda: self.rebuild_menu_after_resize(current_category))
+
+    def apply_mobile_layout(self):
+        """Apply mobile layout for small screens"""
+        # Reconfigure the grid to stack menu and order sections vertically
+        self.root.grid_columnconfigure(0, weight=1)  # Full width
+        self.root.grid_columnconfigure(1, weight=1)  # Hidden/collapsed
+        
+        # Move order frame below menu frame
+        self.order_frame.grid_forget()
+        self.order_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        
+        # Reduce category button size and adjust padding
+        for cat_btn in self.category_buttons.values():
+            cat_btn.configure(padding=(2, 1))
+        
+        # Adjust menu items to use fewer columns
+        self.max_menu_cols = 3  # 3 columns for mobile
+        
+        # Adjust font sizes
+        self.menu_label.configure(font=('Arial', 14, 'bold'))
+        self.order_title_label.configure(font=('Arial', 14, 'bold'))
+        self.total_label.configure(font=('Arial', 12))
+        
+        # Make order controls more compact
+        self.table_number.configure(width=3)
+        self.person_spinbox.configure(width=3)
+
+        self.order_tree.configure(height=4)
+        for person_data in self.individual_trees.values():
+            if 'tree' in person_data:
+                person_data['tree'].configure(height=4)
+    
+        self.drop_frame.pack(fill=tk.X, padx=5, pady=3, ipady=5) 
+        self.drop_label.pack(pady=10)
+        
+        # Stack buttons in the button frame vertically
+        for button in [self.clear_button, self.checkout_button, self.split_bill_button, self.delete_button]:
+            button.pack_forget()
+            button.pack(fill=tk.X, padx=2, pady=2)
+        
+        # Ensure scrollbars remain functional
+        self.menu_canvas.configure(height=200)  # Fixed height for menu area
+
+    def apply_tablet_layout(self):
+        """Apply tablet layout for medium screens"""
+        # Restore horizontal layout but with adjusted proportions
+        self.root.grid_columnconfigure(0, weight=2)  # Menu 2/3
+        self.root.grid_columnconfigure(1, weight=1)  # Order 1/3
+        
+        # Move order frame back to side
+        self.order_frame.grid_forget()
+        self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        
+        # Adjust category buttons
+        for cat_btn in self.category_buttons.values():
+            cat_btn.configure(padding=(4, 2))
+        
+        # Adjust menu items to use medium number of columns
+        self.max_menu_cols = 2  # 2 columns for tablet
+        
+        # Restore font sizes
+        self.menu_label.configure(font=('Arial', 16, 'bold'))
+        self.order_title_label.configure(font=('Arial', 16, 'bold'))
+        self.total_label.configure(font=('Arial', 14))
+        
+        # Restore field sizes
+        self.table_number.configure(width=5)
+        self.person_spinbox.configure(width=5)
+        
+        # Restore horizontal button layout
+        for button in [self.clear_button, self.checkout_button, self.split_bill_button, self.delete_button]:
+            button.pack_forget()
+        self.clear_button.pack(side=tk.LEFT, padx=3)
+        self.checkout_button.pack(side=tk.LEFT, padx=3)
+        self.split_bill_button.pack(side=tk.LEFT, padx=3)
+        self.delete_button.pack(side=tk.LEFT, padx=3)
+        
+        # Adjust canvas to expand properly
+        self.menu_canvas.configure(height=0)  # Let it expand naturally
+
+    def apply_desktop_layout(self):
+        """Apply desktop layout for large screens"""
+        # Original desktop proportions
+        self.root.grid_columnconfigure(0, weight=4)  # Menu 4/5
+        self.root.grid_columnconfigure(1, weight=1)  # Order 1/5
+        
+        # Ensure order frame is in the right position
+        self.order_frame.grid_forget()
+        self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        
+        # Full size for category buttons
+        for cat_btn in self.category_buttons.values():
+            cat_btn.configure(padding=(5, 3))
+        
+        # Use maximum number of columns for menu items
+        self.max_menu_cols = 3  # 3 columns for desktop
+        
+        # Standard font sizes
+        self.menu_label.configure(font=('Arial', 16, 'bold'))
+        self.order_title_label.configure(font=('Arial', 16, 'bold'))
+        self.total_label.configure(font=('Arial', 14))
+        
+        # Standard field sizes
+        self.table_number.configure(width=5)
+        self.person_spinbox.configure(width=5)
+        
+        # Standard button layout
+        for button in [self.clear_button, self.checkout_button, self.split_bill_button, self.delete_button]:
+            button.pack_forget()
+        self.clear_button.pack(side=tk.LEFT, padx=5)
+        self.checkout_button.pack(side=tk.LEFT, padx=5)
+        self.split_bill_button.pack(side=tk.LEFT, padx=5)
+        self.delete_button.pack(side=tk.LEFT, padx=5)
+        
+        # Full expansion for menu area
+        self.menu_canvas.configure(height=0)
 
     def rebuild_menu_after_resize(self, category):
         """Rebuild the menu after window resize with the current category"""
@@ -719,7 +854,7 @@ class POSView:
                     button.config(text=translated_cat)
     
     def create_menu_items(self, items, categories):
-        """Create draggable menu item widgets with improved usability"""
+        """Create draggable menu item widgets with improved usability and responsive design"""
         # Clear existing widgets
         for widget in self.menu_scrollable_frame.winfo_children():
             widget.destroy()
@@ -763,12 +898,36 @@ class POSView:
         
         # Create menu items
         current_category = self.selected_category.get()
+        
+        # Determine number of columns based on current layout
+        max_cols = getattr(self, 'max_menu_cols', 3)  # Default to 3 if not set
+        
         row = 0
         col = 0
-        max_cols = 3  # Number of items per row
         
         # Filter items by selected category if not "All"
         display_items = items if current_category == "All" else [item for item in items if item.category == current_category]
+        
+        # Configure the grid with evenly distributed columns
+        for i in range(max_cols):
+            self.menu_scrollable_frame.columnconfigure(i, weight=1)
+        
+        # Adjust item size based on layout
+        if self.current_layout == "mobile":
+            item_width = 100
+            item_height = 60
+            font_size_name = 10
+            font_size_price = 9
+        elif self.current_layout == "tablet":
+            item_width = 110
+            item_height = 70
+            font_size_name = 11
+            font_size_price = 10
+        else:  # desktop
+            item_width = 120
+            item_height = 80
+            font_size_name = 12
+            font_size_price = 10
         
         for item in display_items:
             if col >= max_cols:
@@ -777,22 +936,24 @@ class POSView:
                 
             # Create a frame for each menu item
             item_frame = ttk.Frame(self.menu_scrollable_frame, relief="raised", borderwidth=2)
-            item_frame.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+            item_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             
-            # Set minimum size to make buttons larger
-            item_frame.columnconfigure(0, minsize=120)
-            item_frame.rowconfigure(0, minsize=80)
+            # Set minimum size based on layout
+            item_frame.columnconfigure(0, minsize=item_width)
+            item_frame.rowconfigure(0, minsize=item_height)
             
             # Create a container inside the frame for better styling
-            inner_frame = ttk.Frame(item_frame, padding=5)
+            inner_frame = ttk.Frame(item_frame, padding=3)
             inner_frame.pack(fill=tk.BOTH, expand=True)
             
-            # Item name with the price
-            name_label = ttk.Label(inner_frame, text=f"{item.name}", font=('Arial', 12, 'bold'))
-            name_label.pack(pady=(5, 0), fill=tk.BOTH, expand=True)
+            # Item name with the price - adjust font size based on layout
+            name_label = ttk.Label(inner_frame, text=f"{item.name}", 
+                                 font=('Arial', font_size_name, 'bold'))
+            name_label.pack(pady=(3, 0), fill=tk.BOTH, expand=True)
             
-            price_label = ttk.Label(inner_frame, text=f"${item.price:.2f}", font=('Arial', 10))
-            price_label.pack(pady=(0, 5), fill=tk.BOTH, expand=True)
+            price_label = ttk.Label(inner_frame, text=f"${item.price:.2f}", 
+                                  font=('Arial', font_size_price))
+            price_label.pack(pady=(0, 3), fill=tk.BOTH, expand=True)
             
             # Store reference to the item in the widget
             item_frame.item = item
@@ -832,8 +993,14 @@ class POSView:
         frame = ttk.Frame(self.drag_image, padding=10)
         frame.pack(fill=tk.BOTH, expand=True)
         
+        # Adjust drag image font size based on current layout
+        if self.current_layout == "mobile":
+            font_size = 10
+        else:
+            font_size = 11
+            
         label = ttk.Label(frame, text=f"{item.name}\n${item.price:.2f}",
-                        background='lightblue', font=('Arial', 11, 'bold'), padding=10)
+                        background='lightblue', font=('Arial', font_size, 'bold'), padding=10)
         label.pack(fill=tk.BOTH, expand=True)
         
         # Position the drag image at cursor
@@ -951,9 +1118,15 @@ class POSView:
                                                  text=f"{self.get_text('drop_items_here')} - {translated_name}")
                 person_drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
                 
+                # Adjust label size based on current layout
+                if self.current_layout == "mobile":
+                    font_size = 9
+                else:
+                    font_size = 10
+                
                 person_drop_label = ttk.Label(person_drop_frame, 
                                            text=f"{self.get_text('drag_hint')} - {translated_name}",
-                                           font=('Arial', 10), foreground='gray')
+                                           font=('Arial', font_size), foreground='gray')
                 person_drop_label.pack(pady=20)
                 
                 # Create the treeview for this page
@@ -964,13 +1137,23 @@ class POSView:
                 person_tree.heading('Quantity', text=self.get_text("quantity"))
                 person_tree.heading('Price', text=self.get_text("price"))
                 
+                # Adjust column widths based on layout
+                if self.current_layout == "mobile":
+                    person_tree.column('Name', width=80)
+                    person_tree.column('Quantity', width=40)
+                    person_tree.column('Price', width=60)
+                else:
+                    person_tree.column('Name', width=150)
+                    person_tree.column('Quantity', width=80)
+                    person_tree.column('Price', width=100)
+                
                 # Save reference
                 self.individual_trees[person_name] = {
                     'frame': person_frame,
                     'tree': person_tree,
                     'drop_frame': person_drop_frame
                 }
-                # In the update_individual_tabs method, after creating the person_tree add
+                # Bind events
                 person_tree.bind("<<TreeviewSelect>>", self.on_order_item_selected)
 
     def show_individual_order_context_menu(self, event, tree, person_index):
@@ -1022,6 +1205,16 @@ class POSView:
         for item, quantity in order_items:
             self.order_tree.insert('', 'end', values=(item.name, quantity, f"${item.price * quantity:.2f}"))
         
+        # Adjust total order column widths based on layout
+        if self.current_layout == "mobile":
+            self.order_tree.column('Name', width=80)
+            self.order_tree.column('Quantity', width=40)
+            self.order_tree.column('Price', width=60)
+        else:
+            self.order_tree.column('Name', width=150)
+            self.order_tree.column('Quantity', width=80)
+            self.order_tree.column('Price', width=100)
+        
         # If there is split account information, update personal order display
         if split_items:
             for person_idx, (items, subtotal) in enumerate(split_items):
@@ -1041,9 +1234,15 @@ class POSView:
         messagebox.showinfo(self.get_text("information"), message)
 
     def display_split_bills(self, split_bills):
+        # Create a responsive split bill window
         split_bill_window = tk.Toplevel(self.root)
         split_bill_window.title(self.get_text("split_bill"))
-        split_bill_window.geometry("600x400")
+        
+        # Adjust size based on current layout
+        if self.current_layout == "mobile":
+            split_bill_window.geometry("400x500")
+        else:
+            split_bill_window.geometry("600x400")
 
         main_canvas = tk.Canvas(split_bill_window)
         scrollbar = ttk.Scrollbar(split_bill_window, orient="vertical", command=main_canvas.yview)
@@ -1067,10 +1266,12 @@ class POSView:
             
             if not items:  # Check if there are items
                 ttk.Label(frame, text=self.get_text("no_items")).pack(pady=10)
-                ttk.Label(frame, text=f"{self.get_text('subtotal')}: $0.00", font=('Arial', 12, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
+                ttk.Label(frame, text=f"{self.get_text('subtotal')}: $0.00", 
+                        font=('Arial', 12 if self.current_layout != "mobile" else 11, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
                 continue
             
-            bill_tree = ttk.Treeview(frame, columns=('Name', 'Quantity', 'Price'), show='headings', height=5)
+            bill_tree = ttk.Treeview(frame, columns=('Name', 'Quantity', 'Price'), show='headings', 
+                                    height=4 if self.current_layout == "mobile" else 5)
             bill_tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
             
             # Add a horizontal scroll bar
@@ -1082,24 +1283,37 @@ class POSView:
             bill_tree.heading('Quantity', text=self.get_text("quantity"))
             bill_tree.heading('Price', text=self.get_text("price"))
             
-            # Set column width
-            bill_tree.column('Name', width=150, minwidth=100)
-            bill_tree.column('Quantity', width=80, minwidth=60)
-            bill_tree.column('Price', width=100, minwidth=80)
+            # Set column width based on layout
+            if self.current_layout == "mobile":
+                bill_tree.column('Name', width=100, minwidth=80)
+                bill_tree.column('Quantity', width=60, minwidth=40)
+                bill_tree.column('Price', width=80, minwidth=60)
+            else:
+                bill_tree.column('Name', width=150, minwidth=100)
+                bill_tree.column('Quantity', width=80, minwidth=60)
+                bill_tree.column('Price', width=100, minwidth=80)
             
             for item, quantity in items:
                 bill_tree.insert('', 'end', values=(item.name, quantity, f"${item.price * quantity:.2f}"))
                 
-            ttk.Label(frame, text=f"{self.get_text('subtotal')}: ${subtotal:.2f}", font=('Arial', 12, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
+            ttk.Label(frame, text=f"{self.get_text('subtotal')}: ${subtotal:.2f}", 
+                    font=('Arial', 12 if self.current_layout != "mobile" else 11, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
         
         # Add Print and Close buttons
         button_frame = ttk.Frame(scrollable_frame)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
-        ttk.Button(button_frame, text=self.get_text("print_bills"), 
-                 command=lambda: self.show_message(self.get_text("printing_bills"))).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text=self.get_text("close"), 
-                 command=split_bill_window.destroy).pack(side=tk.RIGHT, padx=5)
+        # Adjust button layout based on current display
+        if self.current_layout == "mobile":
+            ttk.Button(button_frame, text=self.get_text("print_bills"), 
+                    command=lambda: self.show_message(self.get_text("printing_bills"))).pack(fill=tk.X, padx=5, pady=2)
+            ttk.Button(button_frame, text=self.get_text("close"), 
+                    command=split_bill_window.destroy).pack(fill=tk.X, padx=5, pady=2)
+        else:
+            ttk.Button(button_frame, text=self.get_text("print_bills"), 
+                    command=lambda: self.show_message(self.get_text("printing_bills"))).pack(side=tk.LEFT, padx=5)
+            ttk.Button(button_frame, text=self.get_text("close"), 
+                    command=split_bill_window.destroy).pack(side=tk.RIGHT, padx=5)
 
 # controller
 class POSController:
