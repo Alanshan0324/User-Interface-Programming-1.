@@ -4,6 +4,50 @@ import tkinter as tk
 from tkinter import simpledialog, messagebox
 import subprocess
 import sys
+LANGUAGES = {
+    "English": {
+        "choose_language": "Choose Language:",
+        "menu": "Menu",
+        "current_order": "Current Order",
+        "total": "Total",
+        "checkout": "Checkout",
+        "clear_order": "Clear Order",
+        "split_bill": "Split Bill",
+        "show_vip_balance": "Show VIP Balance",
+        "pay_from_account": "Pay from Account",
+        "top_up": "Top Up",
+        "logout": "Logout",
+        "unlock": "Unlock"
+    },
+    "中文": {
+        "choose_language": "選擇語言:",
+        "menu": "菜單",
+        "current_order": "當前訂單",
+        "total": "總計",
+        "checkout": "結帳",
+        "clear_order": "清除訂單",
+        "split_bill": "分攤帳單",
+        "show_vip_balance": "顯示 VIP 餘額",
+        "pay_from_account": "從帳戶支付",
+        "top_up": "儲值",
+        "logout": "登出",
+        "unlock": "解鎖"
+    },
+    "Svenska": {
+        "choose_language": "Välj språk:",
+        "menu": "Meny",
+        "current_order": "Nuvarande beställning",
+        "total": "Totalt",
+        "checkout": "Betala",
+        "clear_order": "Rensa beställning",
+        "split_bill": "Dela räkningen",
+        "show_vip_balance": "Visa VIP-saldo",
+        "pay_from_account": "Betala från konto",
+        "top_up": "Ladda upp",
+        "logout": "Logga ut",
+        "unlock": "Lås upp"
+    }
+}
 class MenuItem:
     def __init__(self, id, name, price, category):
         self.id = id
@@ -82,6 +126,44 @@ class MenuModel:
         # Sample menu data
         self.vip_account = 100.00
         self.locker = SpecialLocker()
+
+        self.category_translations = {
+            "Alcoholic Drinks": {
+                "English": "Alcoholic Drinks",
+                "中文": "酒精飲料",
+                "Svenska": "Alkoholhaltiga Drycker"
+            },
+            "Classic Cocktails": {
+                "English": "Classic Cocktails",
+                "中文": "經典雞尾酒",
+                "Svenska": "Klassiska Cocktails"
+            },
+            "Non-Alcoholic Specials": {
+                "English": "Non-Alcoholic Specials",
+                "中文": "無酒精特調",
+                "Svenska": "Alkoholfria Specialiteter"
+            },
+            "Bar Snacks": {
+                "English": "Bar Snacks",
+                "中文": "酒吧小吃",
+                "Svenska": "Barsnacks"
+            },
+            "Main Dishes": {
+                "English": "Main Dishes",
+                "中文": "主餐",
+                "Svenska": "Huvudrätter"
+            },
+            "Desserts": {
+                "English": "Desserts",
+                "中文": "甜點",
+                "Svenska": "Efterrätter"
+            },
+            "Special Menu": {
+                "English": "Special Menu",
+                "中文": "特別菜單",
+                "Svenska": "Specialmeny"
+            }
+        }
         self.menu_items = [
             # Alcoholic Drinks
             MenuItem(1, "Draft Beer", 6.00, "Alcoholic Drinks"),
@@ -180,14 +262,19 @@ class MenuModel:
 
     def get_item_by_id(self, item_id):
         return next((item for item in self.menu_items if item.id == item_id), None)
+    def get_translated_category(self, category, language):
+        return self.category_translations.get(category, {}).get(language, category)
 
 # view
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 class POSView:
-    def __init__(self, root):
+    def __init__(self, root,model):
+        
         self.root = root
+        self.model = model
+        self.current_lang = "English"
         self.root.title("VIP POS System")
         self.root.geometry("1430x600")
         
@@ -195,16 +282,43 @@ class POSView:
         root.columnconfigure(0, weight=4)  # 菜單佔 4/5
         root.columnconfigure(1, weight=1)  # 訂單佔 1/5
         root.rowconfigure(0, weight=1)
+
+
+        self.language_frame = ttk.Frame(root)
+        self.language_frame.grid(row=0, column=0, sticky="nw", padx=5, pady=5)  # Frame 也用 grid
+
+
+        self.label_choose_language = ttk.Label(self.language_frame, text=LANGUAGES[self.current_lang]["choose_language"])
+        self.label_choose_language.grid(row=0, column=0, padx=(0, 5), sticky="w")
+
+        self.language_var = tk.StringVar(self.root)
+        self.language_var.set(self.current_lang)  # 預設語言
+
+
+        self.language_menu = ttk.OptionMenu(self.language_frame, 
+            self.language_var,
+            *LANGUAGES.keys(), 
+            command=self.change_language)
+        self.language_menu.grid(row=0, column=1, padx=5, sticky="e")
+        self.update_language_menu()
         
+
+        
+
+
         # 創建主框架使用 grid 而非 pack
         self.menu_frame = ttk.Frame(root)
-        self.menu_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        self.menu_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
         
         self.order_frame = ttk.Frame(root)
-        self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        self.order_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
         
         # 菜單部分
-        ttk.Label(self.menu_frame, text="Menu", font=('Arial', 16, 'bold')).pack()
+        self.menu_label = ttk.Label(self.menu_frame, text=LANGUAGES[self.current_lang]["menu"], 
+                                    font=('Arial', 16, 'bold'))
+        self.menu_label.pack()
+
+       
         
         # 創建菜單類別框架 (更好的視覺組織)
         self.categories_frame = ttk.Frame(self.menu_frame)
@@ -237,12 +351,13 @@ class POSView:
         
         self.menu_canvas.create_window((0, 0), window=self.menu_scrollable_frame, anchor="nw")
         self.menu_canvas.configure(yscrollcommand=self.menu_scrollbar.set)
-        
+        ｓ
         self.menu_canvas.pack(side="left", fill="both", expand=True)
         self.menu_scrollbar.pack(side="right", fill="y")
         
         # 訂單部分與 notebook
-        ttk.Label(self.order_frame, text="Current Order", font=('Arial', 16, 'bold')).pack()
+        self.order_label = ttk.Label(self.order_frame, text="Current Order", font=('Arial', 16, 'bold'))
+        self.order_label.pack()
         
         # 訂單控制項
         order_config_frame = ttk.Frame(self.order_frame)
@@ -363,6 +478,47 @@ class POSView:
 
         # Bind window resize event
         self.root.bind("<Configure>", self.on_window_resize)
+    def change_language(self, selected_lang):
+        """ 切換語言並更新 UI """
+        self.current_lang = selected_lang
+        translations = LANGUAGES[self.current_lang]
+
+        self.label_choose_language.config(text=translations["choose_language"])
+        self.menu_label.config(text=translations["menu"])
+        self.order_label.config(text=translations["current_order"])
+        self.total_label.config(text=f"{translations['total']}: $0.00")
+        self.checkout_button.config(text=translations["checkout"])
+        self.clear_button.config(text=translations["clear_order"])
+        self.split_bill_button.config(text=translations["split_bill"])
+        self.vip_balance_button.config(text=translations["show_vip_balance"])
+        self.pay_from_account_button.config(text=translations["pay_from_account"])
+        self.topup_button.config(text=translations["top_up"])
+        self.logout_button.config(text=translations["logout"])
+        self.unlock_button.config(text=translations["unlock"])
+        self.update_menu_categories()
+        self.update_language_menu()
+   
+    def update_language_menu(self):
+        """ 重新加載語言選單，確保所有語言都能選擇 """
+        menu = self.language_menu["menu"]
+        menu.delete(0, "end")  # 先清除舊選項
+        
+        for lang in LANGUAGES.keys():
+            menu.add_command(label=lang, command=lambda value=lang: self.language_var.set(value) or self.change_language(value))
+
+    def update_menu_categories(self):
+        """ 更新菜單分類的翻譯 """
+        # 確保當前語言正確 (例如 "繁體中文")
+        for category, translations in self.model.category_translations.items():
+            # 用 self.current_lang 確保語言對應正確
+            translated_category = translations.get(self.current_lang)
+            if translated_category:
+                # 根據語言更新菜單的分類
+                print(f"{category}: {translated_category}")
+            else:
+                print(f"未找到語言 {self.current_lang} 的翻譯: {category}")
+
+
     def update_locker_code(self, code):
         """更新 UI 顯示的密碼"""
         self.locker_code_label.config(text=f"Locker Code: {code}")
@@ -725,12 +881,52 @@ class POSView:
 # controller
 class POSController:
     def __init__(self, model, view):
+        
         self.model = model
         self.view = view
         self.root = view.root
         self.current_order = Order()
         self.update_locker_code()
-        
+        self.current_language = "en"
+        self.translations = {
+            "en": {
+                "menu": "Menu",
+                "current_order": "Current Order",
+                "total": "Total",
+                "checkout": "Checkout",
+                "clear_order": "Clear Order",
+                "split_bill": "Split Bill",
+                "show_vip_balance": "Show VIP Balance",
+                "pay_from_account": "Pay from Account",
+                "top_up": "Top up Account",
+                "logout": "Log Out",
+            },
+            "zh": {
+                "menu": "菜單",
+                "current_order": "當前訂單",
+                "total": "總計",
+                "checkout": "結帳",
+                "clear_order": "清空訂單",
+                "split_bill": "分帳",
+                "show_vip_balance": "顯示VIP餘額",
+                "pay_from_account": "使用帳戶付款",
+                "top_up": "儲值帳戶",
+                "logout": "登出",
+            },
+            "sv": {
+                "menu": "Meny",
+                "current_order": "Nuvarande beställning",
+                "total": "Totalt",
+                "checkout": "Kassa",
+                "clear_order": "Rensa beställning",
+                "split_bill": "Dela nota",
+                "show_vip_balance": "Visa VIP-saldo",
+                "pay_from_account": "Betala från konto",
+                "top_up": "Ladda upp konto",
+                "logout": "Logga ut",
+            }
+            }
+
 
         # Set callback for adding items through drag and drop
         self.view.set_on_add_item_callback(self.add_to_order_drag_drop)
@@ -762,6 +958,8 @@ class POSController:
 
         # Set the callback for category change
         self.view.on_category_change_callback = self.on_category_change
+    
+
     def unlock_fridge(self):
         """驗證組合鎖密碼，正確則更新密碼"""
         code = self.view.unlock_entry.get()
@@ -921,6 +1119,27 @@ class POSController:
             self.root.quit()  # 結束 Tkinter 事件循環
             self.root.destroy()  # 銷毀 Tkinter 主視窗
             subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
+   
+
+    
+    """
+    def update_language(self, lang_code):
+        self.current_language = lang_code
+        translations = self.translations[lang_code]
+
+        # 更新 UI 元件的文字
+        self.view.menu_frame.children['!label'].config(text=translations["menu"])
+        self.view.order_frame.children['!label'].config(text=translations["current_order"])
+        self.view.total_label.config(text=translations["total"] + f": ${self.current_order.total:.2f}")
+        self.view.checkout_button.config(text=translations["checkout"])
+        self.view.clear_button.config(text=translations["clear_order"])
+        self.view.split_bill_button.config(text=translations["split_bill"])
+        self.view.vip_balance_button.config(text=translations["show_vip_balance"])
+        self.view.pay_from_account_button.config(text=translations["pay_from_account"])
+        self.view.topup_button.config(text=translations["top_up"])
+        self.view.logout_button.config(text=translations["logout"])
+"""
+
 
 # main
 def main():
@@ -931,8 +1150,9 @@ def main():
     style.configure("Highlight.TLabelframe", background="lightblue")
     
     model = MenuModel()
-    view = POSView(root)
+    view = POSView(root,model)
     controller = POSController(model, view)
+    view.controller = controller
     root.mainloop()
 
 if __name__ == "__main__":
