@@ -351,7 +351,7 @@ class POSView:
         
         self.menu_canvas.create_window((0, 0), window=self.menu_scrollable_frame, anchor="nw")
         self.menu_canvas.configure(yscrollcommand=self.menu_scrollbar.set)
-        ｓ
+        
         self.menu_canvas.pack(side="left", fill="both", expand=True)
         self.menu_scrollbar.pack(side="right", fill="y")
         
