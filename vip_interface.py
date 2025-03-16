@@ -17,7 +17,47 @@ LANGUAGES = {
         "pay_from_account": "Pay from Account",
         "top_up": "Top Up",
         "logout": "Logout",
-        "unlock": "Unlock"
+        "unlock": "Unlock",
+        "language_selection": "Language Selection",
+        "alcoholic_drinks": "Alcoholic Drinks",
+        "classic_cocktails": "Classic Cocktails",
+        "non_alcoholic_specials": "Non-Alcoholic Specials",
+        "bar_snacks": "Bar Snacks",
+        "main_dishes": "Main Dishes",
+        "desserts": "Desserts",
+        "table_number": "Table Number",
+        "add": "Add",
+        "remove": "Remove",
+        "clear": "Clear",
+        "group_order": "Group Order",
+        "regular_order": "Regular Order",
+        "order_summary": "Order Summary",
+        "split_bill": "Split Bill",
+        "total_order": "Total Order",
+        "quantity": "Quantity",
+        "person": "Person",
+        "persons": "Persons",
+        "bill": "Bill",
+        "choose_person": "Choose Person",
+        "drop_items_here": "Drop items here",
+        "drag_hint": "Drag menu items here to add to order",
+        "order_table": {
+                    "name": "Name",
+                    "quantity": "Quantity",
+                    "price": "Price"
+                },
+        "categories": {
+            "Alcoholic Drinks": "Alcoholic Drinks",
+            "Classic Cocktails": "Classic Cocktails",
+            "Non-Alcoholic Specials": "Non-Alcoholic Specials",
+            "Bar Snacks": "Bar Snacks",
+            "Main Dishes": "Main Dishes",
+            "Desserts": "Desserts",
+            "Special Menu": "Special Menu",
+        },
+        
+
+
     },
     "中文": {
         "choose_language": "選擇語言:",
@@ -31,7 +71,59 @@ LANGUAGES = {
         "pay_from_account": "從帳戶支付",
         "top_up": "儲值",
         "logout": "登出",
-        "unlock": "解鎖"
+        "unlock": "解鎖",
+        "language_selection": "語言選擇",
+        "alcoholic_drinks": "酒精飲料",
+        "classic_cocktails": "經典雞尾酒",
+        "non_alcoholic_specials": "無酒精特調",
+        "bar_snacks": "酒吧小吃",
+        "main_dishes": "主餐",
+        "desserts": "甜點",
+        "table_number": "桌號",
+        "add": "添加",
+        "remove": "移除",
+        "clear": "清空",
+        "group_order": "團體訂單",
+        "regular_order": "一般訂單",
+        "order_summary": "訂單摘要",
+        "split_bill": "分單結帳",
+        "total": "總計",
+        "order": "訂單",
+        "quantity": "數量",
+        "person": "顧客",
+        "persons": "人數",
+        "bill": "帳單",
+        "menu": "菜單",
+        "name": "名稱",
+        "price": "價格",
+        "total_order": "總訂單",
+        "delete_item": "刪除項目",
+        "decrease_quantity": "減少數量",
+        "drop_items_here": "將項目拖放至此",
+        "drag_hint": "拖曳菜單項目至此添加至訂單",
+        "information": "資訊",
+        "no_items": "無項目",
+        "subtotal": "小計",
+        "print_bills": "列印帳單",
+        "printing_bills": "正在列印帳單...",
+        "close": "關閉",
+        "checkout": "結帳",
+        "all": "全部",
+        "choose_person": "選擇顧客",
+        "order_table": {
+                    "name": "名稱",
+                    "quantity": "數量",
+                    "price": "價格"
+                },
+        "categories": {
+            "Alcoholic Drinks": "酒精飲品",
+            "Classic Cocktails": "經典雞尾酒",
+            "Non-Alcoholic Specials": "無酒精特飲",
+            "Bar Snacks": "酒吧小吃",
+            "Main Dishes": "主菜",
+            "Desserts": "甜點",
+            "Special Menu": "特別菜單",
+        },
     },
     "Svenska": {
         "choose_language": "Välj språk:",
@@ -45,7 +137,59 @@ LANGUAGES = {
         "pay_from_account": "Betala från konto",
         "top_up": "Ladda upp",
         "logout": "Logga ut",
-        "unlock": "Lås upp"
+        "unlock": "Lås upp",
+        "language_selection": "Språkval",
+        "alcoholic_drinks": "Alkoholhaltiga Drycker",
+        "classic_cocktails": "Klassiska Cocktails",
+        "non_alcoholic_specials": "Alkoholfria Specialiteter",
+        "bar_snacks": "Barsnacks",
+        "main_dishes": "Huvudrätter",
+        "desserts": "Efterrätter",
+        "table_number": "Bordsnummer",
+        "add": "Lägg till",
+        "remove": "Ta bort",
+        "clear": "Rensa",
+        "group_order": "Gruppbeställning",
+        "regular_order": "Vanlig Beställning",
+        "order_summary": "Beställningsöversikt",
+        "split_bill": "Dela Nota",
+        "total": "Totalt",
+        "order": "Beställning",
+        "quantity": "Antal",
+        "person": "Person",
+        "persons": "Personer",
+        "bill": "Nota",
+        "menu": "Meny",
+        "name": "Namn",
+        "price": "Pris",
+        "total_order": "Total Beställning",
+        "delete_item": "Ta Bort Artikel",
+        "decrease_quantity": "Minska Antal",
+        "drop_items_here": "Släpp Artiklar Här",
+        "drag_hint": "Dra menyartiklar hit för att lägga till i beställningen",
+        "information": "Information",
+        "no_items": "Inga Artiklar",
+        "subtotal": "Delsumma",
+        "print_bills": "Skriv Ut Notor",
+        "printing_bills": "Skriver ut notor...",
+        "close": "Stäng",
+        "checkout": "Betala",
+        "all": "Alla",
+        "choose_person": "Välj Person",
+        "order_table": {
+                    "name": "Namn",
+                    "quantity": "Antal",
+                    "price": "Pris"
+                },
+        "categories": {
+            "Alcoholic Drinks": "Alkoholhaltiga drycker",
+            "Classic Cocktails": "Klassiska cocktails",
+            "Non-Alcoholic Specials": "Alkoholfri specialitet",
+            "Bar Snacks": "Bar snacks",
+            "Main Dishes": "Huvudrätter",
+            "Desserts": "Desserter",
+            "Special Menu": "Specialmeny",
+        },
     }
 }
 class MenuItem:
@@ -127,43 +271,7 @@ class MenuModel:
         self.vip_account = 100.00
         self.locker = SpecialLocker()
 
-        self.category_translations = {
-            "Alcoholic Drinks": {
-                "English": "Alcoholic Drinks",
-                "中文": "酒精飲料",
-                "Svenska": "Alkoholhaltiga Drycker"
-            },
-            "Classic Cocktails": {
-                "English": "Classic Cocktails",
-                "中文": "經典雞尾酒",
-                "Svenska": "Klassiska Cocktails"
-            },
-            "Non-Alcoholic Specials": {
-                "English": "Non-Alcoholic Specials",
-                "中文": "無酒精特調",
-                "Svenska": "Alkoholfria Specialiteter"
-            },
-            "Bar Snacks": {
-                "English": "Bar Snacks",
-                "中文": "酒吧小吃",
-                "Svenska": "Barsnacks"
-            },
-            "Main Dishes": {
-                "English": "Main Dishes",
-                "中文": "主餐",
-                "Svenska": "Huvudrätter"
-            },
-            "Desserts": {
-                "English": "Desserts",
-                "中文": "甜點",
-                "Svenska": "Efterrätter"
-            },
-            "Special Menu": {
-                "English": "Special Menu",
-                "中文": "特別菜單",
-                "Svenska": "Specialmeny"
-            }
-        }
+        
         self.menu_items = [
             # Alcoholic Drinks
             MenuItem(1, "Draft Beer", 6.00, "Alcoholic Drinks"),
@@ -255,16 +363,13 @@ class MenuModel:
         
 
 
-
         ]
     def get_menu_items(self):
         return self.menu_items
 
     def get_item_by_id(self, item_id):
         return next((item for item in self.menu_items if item.id == item_id), None)
-    def get_translated_category(self, category, language):
-        return self.category_translations.get(category, {}).get(language, category)
-
+    
 # view
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -288,7 +393,9 @@ class POSView:
         self.language_frame.grid(row=0, column=0, sticky="nw", padx=5, pady=5)  # Frame 也用 grid
 
 
-        self.label_choose_language = ttk.Label(self.language_frame, text=LANGUAGES[self.current_lang]["choose_language"])
+        self.label_choose_language = ttk.Label(self.language_frame, 
+                                                text=LANGUAGES[self.current_lang]["choose_language"],
+                                                font=("Arial", 10))
         self.label_choose_language.grid(row=0, column=0, padx=(0, 5), sticky="w")
 
         self.language_var = tk.StringVar(self.root)
@@ -301,14 +408,12 @@ class POSView:
             command=self.change_language)
         self.language_menu.grid(row=0, column=1, padx=5, sticky="e")
         self.update_language_menu()
-        
-
-        
-
+    
 
         # 創建主框架使用 grid 而非 pack
         self.menu_frame = ttk.Frame(root)
-        self.menu_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        self.menu_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(10, 5))  # Adjust top spacing
+        
         
         self.order_frame = ttk.Frame(root)
         self.order_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
@@ -363,7 +468,8 @@ class POSView:
         order_config_frame = ttk.Frame(self.order_frame)
         order_config_frame.pack(fill=tk.X, pady=5)
         
-        ttk.Label(order_config_frame, text="Table #:").pack(side=tk.LEFT, padx=5)
+        self.table_text = ttk.Label(order_config_frame, text=LANGUAGES[self.current_lang]["table_number"]+":")
+        self.table_text.pack(side=tk.LEFT, padx=5)
         self.table_number = ttk.Entry(order_config_frame, width=5)
         self.table_number.pack(side=tk.LEFT, padx=5)
         
@@ -371,7 +477,9 @@ class POSView:
         self.group_control_frame = ttk.Frame(order_config_frame)
         self.group_control_frame.pack(side=tk.LEFT, padx=10)
         
-        ttk.Label(self.group_control_frame, text="人數:").pack(side=tk.LEFT, padx=5)
+        
+        self.person_text = ttk.Label(self.group_control_frame, text=LANGUAGES[self.current_lang]["persons"]+":")
+        self.person_text.pack(side=tk.LEFT, padx=5)
         self.people_count = tk.IntVar(value=1)
         self.people_count_label = ttk.Label(self.group_control_frame, textvariable=self.people_count)
         self.people_count_label.pack(side=tk.LEFT, padx=5)
@@ -384,7 +492,8 @@ class POSView:
 
         # 添加新的人員編號
         self.current_person = tk.IntVar(value=1)
-        ttk.Label(self.group_control_frame, text="choose person:").pack(side=tk.LEFT, padx=5)
+        self.choose_person_text = ttk.Label(self.group_control_frame, text=LANGUAGES[self.current_lang]["choose_person"]+":")
+        self.choose_person_text.pack(side=tk.LEFT, padx=5)
         self.person_spinbox = ttk.Spinbox(
             self.group_control_frame, 
             from_=1, 
@@ -400,24 +509,24 @@ class POSView:
         
         # 總訂單頁籤
         self.total_order_frame = ttk.Frame(self.order_notebook)
-        self.order_notebook.add(self.total_order_frame, text="Total Order")
+        self.order_notebook.add(self.total_order_frame, text=LANGUAGES[self.current_lang]["total_order"])
         
         # 創建拖放區域框架
-        self.drop_frame = ttk.LabelFrame(self.total_order_frame, text="Drop Items Here")
+        self.drop_frame = ttk.LabelFrame(self.total_order_frame, text=LANGUAGES[self.current_lang]["drop_items_here"])
         self.drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
         
         # 拖放區域的標籤
-        self.drop_label = ttk.Label(self.drop_frame, text="Drag menu items here to add to order", 
+        self.drop_label = ttk.Label(self.drop_frame, text=LANGUAGES[self.current_lang]["drag_hint"], 
                                   font=('Arial', 10), foreground='gray')
         self.drop_label.pack(pady=20)
         
         # 創建總訂單樹狀視圖
         self.order_tree = ttk.Treeview(self.total_order_frame, columns=('Name', 'Quantity', 'Price'), show='headings')
         self.order_tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        self.order_tree.heading('Name', text='Name')
-        self.order_tree.heading('Quantity', text='Quantity')
-        self.order_tree.heading('Price', text='Price')
+       
+        self.order_tree.heading('Name', text=["name"])
+        self.order_tree.heading('Quantity', text=["quantity"])
+        self.order_tree.heading('Price', text=["price"])
         
         # 個人訂單框架 (將動態填充)
         self.individual_trees = {}  # 儲存每個人的樹狀視圖
@@ -482,6 +591,8 @@ class POSView:
         """ 切換語言並更新 UI """
         self.current_lang = selected_lang
         translations = LANGUAGES[self.current_lang]
+        for category, button in self.category_buttons.items():
+            button.config(text=translations["categories"].get(category, category))
 
         self.label_choose_language.config(text=translations["choose_language"])
         self.menu_label.config(text=translations["menu"])
@@ -495,11 +606,19 @@ class POSView:
         self.topup_button.config(text=translations["top_up"])
         self.logout_button.config(text=translations["logout"])
         self.unlock_button.config(text=translations["unlock"])
+        self.table_text.config(text=translations["table_number"])
+        self.person_text.config(text=translations["persons"])
+        self.choose_person_text.config(text=translations["choose_person"])
+        self.order_notebook.tab(0, text=translations["total_order"])
+        self.drop_frame.config(text=translations["drop_items_here"])
+        self.drop_label.config(text=translations["drag_hint"])
+        self.order_tree.heading('Name', text=translations["order_table"]["name"])
+        self.order_tree.heading('Quantity', text=translations["order_table"]["quantity"])
+        self.order_tree.heading('Price', text=translations["order_table"]["price"])
         self.update_menu_categories()
         self.update_language_menu()
    
     def update_language_menu(self):
-        """ 重新加載語言選單，確保所有語言都能選擇 """
         menu = self.language_menu["menu"]
         menu.delete(0, "end")  # 先清除舊選項
         
@@ -507,21 +626,15 @@ class POSView:
             menu.add_command(label=lang, command=lambda value=lang: self.language_var.set(value) or self.change_language(value))
 
     def update_menu_categories(self):
-        """ 更新菜單分類的翻譯 """
-        # 確保當前語言正確 (例如 "繁體中文")
-        for category, translations in self.model.category_translations.items():
-            # 用 self.current_lang 確保語言對應正確
-            translated_category = translations.get(self.current_lang)
-            if translated_category:
-                # 根據語言更新菜單的分類
-                print(f"{category}: {translated_category}")
-            else:
-                print(f"未找到語言 {self.current_lang} 的翻譯: {category}")
+        
+        translations = LANGUAGES[self.current_lang]["categories"]
+        for category, button in self.category_buttons.items():
+            button.config(text=translations.get(category, category))
 
 
     def update_locker_code(self, code):
-        """更新 UI 顯示的密碼"""
-        self.locker_code_label.config(text=f"Locker Code: {code}")
+        
+        print(f"Locker Code: {code}")
 
     def on_window_resize(self, event):
         """Handle window resize to adjust menu layout"""
@@ -887,47 +1000,8 @@ class POSController:
         self.root = view.root
         self.current_order = Order()
         self.update_locker_code()
-        self.current_language = "en"
-        self.translations = {
-            "en": {
-                "menu": "Menu",
-                "current_order": "Current Order",
-                "total": "Total",
-                "checkout": "Checkout",
-                "clear_order": "Clear Order",
-                "split_bill": "Split Bill",
-                "show_vip_balance": "Show VIP Balance",
-                "pay_from_account": "Pay from Account",
-                "top_up": "Top up Account",
-                "logout": "Log Out",
-            },
-            "zh": {
-                "menu": "菜單",
-                "current_order": "當前訂單",
-                "total": "總計",
-                "checkout": "結帳",
-                "clear_order": "清空訂單",
-                "split_bill": "分帳",
-                "show_vip_balance": "顯示VIP餘額",
-                "pay_from_account": "使用帳戶付款",
-                "top_up": "儲值帳戶",
-                "logout": "登出",
-            },
-            "sv": {
-                "menu": "Meny",
-                "current_order": "Nuvarande beställning",
-                "total": "Totalt",
-                "checkout": "Kassa",
-                "clear_order": "Rensa beställning",
-                "split_bill": "Dela nota",
-                "show_vip_balance": "Visa VIP-saldo",
-                "pay_from_account": "Betala från konto",
-                "top_up": "Ladda upp konto",
-                "logout": "Logga ut",
-            }
-            }
-
-
+        
+        
         # Set callback for adding items through drag and drop
         self.view.set_on_add_item_callback(self.add_to_order_drag_drop)
 
@@ -1121,25 +1195,7 @@ class POSController:
             subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
    
 
-    
-    """
-    def update_language(self, lang_code):
-        self.current_language = lang_code
-        translations = self.translations[lang_code]
-
-        # 更新 UI 元件的文字
-        self.view.menu_frame.children['!label'].config(text=translations["menu"])
-        self.view.order_frame.children['!label'].config(text=translations["current_order"])
-        self.view.total_label.config(text=translations["total"] + f": ${self.current_order.total:.2f}")
-        self.view.checkout_button.config(text=translations["checkout"])
-        self.view.clear_button.config(text=translations["clear_order"])
-        self.view.split_bill_button.config(text=translations["split_bill"])
-        self.view.vip_balance_button.config(text=translations["show_vip_balance"])
-        self.view.pay_from_account_button.config(text=translations["pay_from_account"])
-        self.view.topup_button.config(text=translations["top_up"])
-        self.view.logout_button.config(text=translations["logout"])
-"""
-
+   
 
 # main
 def main():
