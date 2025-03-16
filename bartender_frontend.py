@@ -1,21 +1,32 @@
 import tkinter as tk
 from tkinter import messagebox
 from bartender_backend import BartenderController, Employee
-import subprocess
-import sys
+
 
 class BartenderFrontend:
     def __init__(self, controller):
         self.controller = controller
         self.root = tk.Tk()
+        self.root.geometry("1430x1000")
         self.root.title("Bartender Frontend")
+        self.root.minsize(600, 400)  # 設置最小視窗大小
 
-        # Configure the root window for responsiveness.
+        # 定義響應式設計的斷點
+        self.breakpoints = {
+            "mobile": 800,    # 寬度小於800px時使用手機佈局
+            "tablet": 1200    # 寬度在800px到1200px之間使用平板佈局
+        }
+        
+        # 追蹤當前佈局
+        self.current_layout = "desktop"  # 默認桌面佈局
+
+        # 為響應式設計配置根視窗
         self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=1)  # 為手機模式添加第二行
         self.root.columnconfigure(0, weight=3)
         self.root.columnconfigure(1, weight=1)
 
-        # --- Product List Frame ---
+        # --- 產品列表框架 ---
         self.product_frame = tk.Frame(self.root, bd=2, relief=tk.SUNKEN)
         self.product_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         self.product_frame.rowconfigure(1, weight=1)
@@ -37,7 +48,7 @@ class BartenderFrontend:
         tk.Button(self.product_frame, text="Refresh Products", command=self.refresh_products) \
             .grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
-        # --- Control Frame ---
+        # --- 控制框架 ---
         self.control_frame = tk.Frame(self.root, bd=2, relief=tk.SUNKEN)
         self.control_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
         self.control_frame.columnconfigure(0, weight=1)
@@ -53,8 +64,8 @@ class BartenderFrontend:
 
         tk.Label(self.control_frame, text="New Price:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
-        self.entry_new_price = tk.Entry(self.control_frame)
-        self.entry_new_price.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.entry_new_cahse = tk.Entry(self.control_frame)
+        self.entry_new_cahse.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
         tk.Button(self.control_frame, text="Modify Price", command=self.modify_price) \
             .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
@@ -80,17 +91,17 @@ class BartenderFrontend:
             .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        # Refill Low Stock Items Button
+        # 補充低庫存商品按鈕
         tk.Button(self.control_frame, text="Refill Low Stock Items", command=self.refill_low_stock) \
             .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        # Alert security
+        # 警報安全
         tk.Button(self.control_frame, text="Alert Security", command=self.alert_security) \
             .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        # --- Order Management Controls ---
+        # --- 訂單管理控制 ---
         tk.Label(self.control_frame, text="--- Order Management ---", fg="darkgreen") \
             .grid(row=row, column=0, sticky="w", padx=5, pady=5);
         row += 1
@@ -135,22 +146,33 @@ class BartenderFrontend:
 
         self.status_label = tk.Label(self.control_frame, text="", fg="blue")
         self.status_label.grid(row=row, column=0, sticky="w", padx=5, pady=5)
-        tk.Button(self.control_frame, text="Log out", command=self.logout) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
-        row += 1
+        
+        # 存儲所有標籤和按鈕，用於響應式設計調整
+        self.all_labels = []
+        for widget in self.product_frame.winfo_children():
+            if isinstance(widget, tk.Label):
+                self.all_labels.append(widget)
+        for widget in self.control_frame.winfo_children():
+            if isinstance(widget, tk.Label):
+                self.all_labels.append(widget)
+        
+        self.all_entries = [self.entry_product_id, self.entry_new_cahse, self.entry_new_stock, 
+                           self.entry_quantity, self.entry_remove_quantity]
+        
+        self.all_buttons = []
+        for widget in self.product_frame.winfo_children():
+            if isinstance(widget, tk.Button):
+                self.all_buttons.append(widget)
+        for widget in self.control_frame.winfo_children():
+            if isinstance(widget, tk.Button):
+                self.all_buttons.append(widget)
+                
+        # 綁定視窗大小調整事件
+        self.root.bind("<Configure>", self.on_window_resize)
 
         self.refresh_products()
         self.refresh_order()
-    def logout(self):
-        """登出並回到登入介面"""
-        confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
-        if confirm:
-            
-   
-            self.root.quit()  # 結束 Tkinter 事件循環
-            self.root.destroy()  # 銷毀 Tkinter 主視窗
-            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
-            
+
     def refresh_products(self):
         self.product_listbox.delete(0, tk.END)
         products = [self.controller.get_product(pid) for pid in self.controller.get_product_ids()]
@@ -206,7 +228,7 @@ class BartenderFrontend:
 
     def modify_price(self):
         product_id_str = self.entry_product_id.get()
-        new_price_str = self.entry_new_price.get()
+        new_price_str = self.entry_new_cahse.get()
         if product_id_str and new_price_str:
             try:
                 product_id = int(product_id_str)
@@ -305,6 +327,159 @@ class BartenderFrontend:
 
     def alert_security(self):
         self.status_label.config(text="Security alert sent.")
+        
+    def on_window_resize(self, event):
+        """處理視窗大小調整事件，應用響應式佈局"""
+        # 只處理來自根視窗的事件，而不是子部件
+        if event.widget == self.root:
+            width = event.width
+            
+            # 根據視窗寬度確定佈局
+            if width < self.breakpoints["mobile"] and self.current_layout != "mobile":
+                self.apply_mobile_layout()
+                self.current_layout = "mobile"
+            elif width >= self.breakpoints["mobile"] and width < self.breakpoints["tablet"] and self.current_layout != "tablet":
+                self.apply_tablet_layout()
+                self.current_layout = "tablet"
+            elif width >= self.breakpoints["tablet"] and self.current_layout != "desktop":
+                self.apply_desktop_layout()
+                self.current_layout = "desktop"
+
+    def apply_mobile_layout(self):
+        """應用手機佈局，適用於小屏幕"""
+        # 重新配置網格，使產品框架和控制框架垂直排列
+        self.root.grid_columnconfigure(0, weight=1)  # 全寬
+        self.root.grid_columnconfigure(1, weight=0)  # 隱藏/折疊
+        
+        # 從網格中移除兩個框架
+        self.product_frame.grid_forget()
+        self.control_frame.grid_forget()
+        
+        # 將產品框架放在上半部分（使其佔據50%的高度）
+        # 將行0配置為佔比 1，確保產品框架佔據屏幕的上50%
+        self.root.rowconfigure(0, weight=1)  
+        self.root.rowconfigure(1, weight=1)  # 行1也佔比1，確保下半部分也有50%的空間
+        
+        # 重新放置產品框架在上半部分（第0行）
+        self.product_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        
+        # 重新放置控制框架在下半部分（第1行）
+        self.control_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        
+        # 設置產品框架的最小高度，確保它顯示足夠的內容
+        self.product_listbox.config(height=10)
+        
+        # 減小字體大小
+        for label in self.all_labels:
+            current_font = label.cget("font")
+            if isinstance(current_font, str) and current_font:
+                parts = current_font.split()
+                if len(parts) >= 2:
+                    family = parts[0]
+                    try:
+                        size = max(8, int(parts[1]) - 2)  # 減小字體大小但不小於8
+                        label.config(font=(family, size))
+                    except (ValueError, IndexError):
+                        pass
+        
+        # 縮小輸入欄位
+        for entry in self.all_entries:
+            entry.config(width=10)
+        
+        # 縮小訂單列表框的高度以節省空間
+        self.order_listbox.config(height=4)
+        
+        # 減少按鈕的內邊距
+        for button in self.all_buttons:
+            button.grid_configure(padx=2, pady=1)
+
+    def apply_tablet_layout(self):
+        """應用平板佈局，適用於中等屏幕"""
+        # 調整平板視圖的比例
+        self.root.grid_columnconfigure(0, weight=2)  # 產品列表佔2/3
+        self.root.grid_columnconfigure(1, weight=1)  # 控制面板佔1/3
+        
+        # 重置行配置為原始值
+        self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=0)  # 禁用第二行
+        
+        # 恢復兩個框架到原始位置，但調整大小
+        self.product_frame.grid_forget()
+        self.control_frame.grid_forget()
+        
+        self.product_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        self.control_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        
+        # 調整中等屏幕的字體大小
+        for label in self.all_labels:
+            current_font = label.cget("font")
+            if isinstance(current_font, str) and current_font:
+                parts = current_font.split()
+                if len(parts) >= 2:
+                    family = parts[0]
+                    try:
+                        size = max(10, int(parts[1]) - 1)  # 略微減小字體大小
+                        label.config(font=(family, size))
+                    except (ValueError, IndexError):
+                        pass
+        
+        # 調整平板視圖的輸入大小
+        for entry in self.all_entries:
+            entry.config(width=12)
+        
+        # 調整平板視圖的列表框高度
+        self.product_listbox.config(height=10)
+        self.order_listbox.config(height=6)
+        
+        # 按鈕的適中內邊距
+        for button in self.all_buttons:
+            button.grid_configure(padx=3, pady=2)
+
+    def apply_desktop_layout(self):
+        """應用桌面佈局，適用於大屏幕"""
+        # 原始桌面比例
+        self.root.grid_columnconfigure(0, weight=3)  # 產品列表佔3/4
+        self.root.grid_columnconfigure(1, weight=1)  # 控制面板佔1/4
+        
+        # 重置行配置
+        self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1, weight=0)  # 禁用第二行
+        
+        # 確保框架處於正確位置
+        self.product_frame.grid_forget()
+        self.control_frame.grid_forget()
+        
+        self.product_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        self.control_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        
+        # 恢復原始字體大小
+        for label in self.all_labels:
+            current_font = label.cget("font")
+            if isinstance(current_font, str) and current_font:
+                parts = current_font.split()
+                if len(parts) >= 2:
+                    family = parts[0]
+                    try:
+                        # 根據標籤上下文確定原始大小
+                        if "Products" in label.cget("text") or "Current Order:" in label.cget("text"):
+                            size = 14
+                        else:
+                            size = 12
+                        label.config(font=(family, size))
+                    except (ValueError, IndexError):
+                        pass
+        
+        # 恢復輸入欄位大小
+        for entry in self.all_entries:
+            entry.config(width=15)
+        
+        # 列表框的完整高度
+        self.product_listbox.config(height=15)
+        self.order_listbox.config(height=8)
+        
+        # 按鈕的原始內邊距
+        for button in self.all_buttons:
+            button.grid_configure(padx=5, pady=2)
 
     def run(self):
         self.root.mainloop()

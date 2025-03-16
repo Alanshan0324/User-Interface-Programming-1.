@@ -1492,7 +1492,7 @@ def main():
     
     root = tk.Tk()
     
-    # Create a highlighted drop-down area style
+    # Create a highlighted drop-down are  a style
     style = ttk.Style()
     style.configure("Highlight.TLabelframe", background="lightblue")
     
