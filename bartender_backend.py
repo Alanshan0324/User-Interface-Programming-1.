@@ -10,7 +10,102 @@ from data_import import (
 )
 from undo_manager import UndoRedoManager
 from commands import *
+LANGUAGES = {
+    'en': {  # English
+       
+        'logout': "Logout",
+        'create_order_button': "Create Order",
+        'add_item_button': "Add Item to Order",
+        'remove_item_button': "Remove Item from Order",
+        'finish_order_button': "Finish Order",
+        'undo_button': "Undo",
+        'redo_button': "Redo",
+        'language_label': "Language",
+        'product_label': "Products",
+        'sort_label': "Sort by:",
+        'product_id_label': "Product ID:",
+        'new_price_label': "New Price:",
+        'new_stock_label': "New Stock:",
+        'quantity_label': "Quantity:",
+        'remove_quantity_label': "Quantity to Remove:",
+        'current_order_label': "Current Order:",
+        'order_management_label': "--- Order Management ---",
+        'refill_low_stock_button': "Refill Low Stock Items",
+        'alert_security_button': "Alert Security",
+        'refresh_products_button': "Refresh Products",
+        'modify_price_button': "Modify Price",
+        'remove_product_button': "Remove Product",
+        'update_stock_button': "Update Stock",
+        "order_undo": "Order Undo",
+        "order_redo": "Order Redo",
+        "current_order": "Current Order:",
+        # 其他按鈕和標籤文字...
+    },
+    'zh': {  # 中文
+        
+        'logout': "登出",
+        'create_order_button': "創建訂單",
+        'add_item_button': "添加項目",
+        'remove_item_button': "移除項目",
+        'finish_order_button': "完成訂單",
+        'undo_button': "撤銷",
+        'redo_button': "重做",
+        'language_label': "語言",
+        'product_label': "產品",
+        'sort_label': "排序方式:",
+        'product_id_label': "產品 ID:",
+        'new_price_label': "新價格:",
+        'new_stock_label': "新庫存:",
+        'quantity_label': "數量:",
+        'remove_quantity_label': "移除數量:",
+        'current_order_label': "當前訂單:",
+        'order_management_label': "--- 訂單管理 ---",
+        'refill_low_stock_button': "補充低庫存商品",
+        'alert_security_button': "警報安全",
+        'refresh_products_button': "刷新產品",
+        'modify_price_button': "修改價格",
+        'remove_product_button': "移除產品",
+        'update_stock_button': "更新庫存",
+        "order_undo": "訂單撤銷",
+        "order_redo": "訂單重做",
+        "current_order": "當前訂單:",
 
+        # 其他按鈕和標籤文字...
+    },
+    'sv': {  # Swedish
+        
+        'logout': "Logga ut",
+        'create_order_button': "Skapa Order",
+        'add_item_button': "Lägg till Artikel",
+        'remove_item_button': "Ta bort Artikel",
+        'finish_order_button': "Avsluta Order",
+        'undo_button': "Ångra",
+        'redo_button': "Gör om",
+        'language_label': "Språk",
+        'product_label': "Produkter",
+        'sort_label': "Sortera efter:",
+        'product_id_label': "Produkt ID:",
+        'new_price_label': "Nytt Pris:",
+        'new_stock_label': "Nytt Lager:",
+        'quantity_label': "Kvantitet:",
+        'remove_quantity_label': "Kvantitet att Ta Bort:",
+        'current_order_label': "Aktuell Order:",
+        'order_management_label': "--- Orderhantering ---",
+        'refill_low_stock_button': "Fyll på Lågt Lager",
+        'alert_security_button': "Larma Säkerhet",
+        'refresh_products_button': "Uppdatera Produkter",
+        'modify_price_button': "Ändra Pris",
+        'remove_product_button': "Ta Bort Produkt",
+        'update_stock_button': "Upp",
+        "order_undo": "OrderÅngra",
+        "order_redo": "OrderGör om",
+        "current_order": "Aktuell Order:",
+
+
+
+        # 其他按鈕和標籤文字...
+    }
+}
 # ---------------------
 # Model Classes (Order, Employee)
 # ---------------------
@@ -105,6 +200,25 @@ class BartenderController:
         self.payments_db = import_payments('DBFilesJSON/dutchman_table_payments.json')
         self.undo_manager = UndoRedoManager()
         self.current_order = None  # Only one active order
+        
+        self.current_language = 'en'  # Default language is English
+    
+    def get_translation(self, key):
+        return LANGUAGES.get(self.current_language, {}).get(key)
+    def set_language(self, language_code):
+        """設定語言"""
+        if language_code in LANGUAGES:
+            self.current_language = language_code
+        else:
+            print(f"Unsupported language: {language_code}")
+
+       
+
+
+    
+
+        
+   
 
     def login_employee(self):
         self.employee.login()

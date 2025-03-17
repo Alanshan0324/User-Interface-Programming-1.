@@ -389,37 +389,19 @@ class POSView:
         root.rowconfigure(0, weight=1)
 
 
-        self.language_frame = ttk.Frame(root)
-        self.language_frame.grid(row=0, column=0, sticky="nw", padx=5, pady=5)  # Frame 也用 grid
-
-
-        self.label_choose_language = ttk.Label(self.language_frame, 
-                                                text=LANGUAGES[self.current_lang]["choose_language"],
-                                                font=("Arial", 10))
-        self.label_choose_language.grid(row=0, column=0, padx=(0, 5), sticky="w")
-
-        self.language_var = tk.StringVar(self.root)
-        self.language_var.set(self.current_lang)  # 預設語言
-
-
-        self.language_menu = ttk.OptionMenu(self.language_frame, 
-            self.language_var,
-            *LANGUAGES.keys(), 
-            command=self.change_language)
-        self.language_menu.grid(row=0, column=1, padx=5, sticky="e")
-        self.update_language_menu()
+        
     
 
         # 創建主框架使用 grid 而非 pack
         self.menu_frame = ttk.Frame(root)
-        self.menu_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=(10, 5))  # Adjust top spacing
-        
+        self.menu_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         self.order_frame = ttk.Frame(root)
-        self.order_frame.grid(row=1, column=1, sticky="nsew", padx=5, pady=5)
-        
+        self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+        self.title_frame = ttk.Frame(self.menu_frame)
+        self.title_frame.pack(fill=tk.X)
         # 菜單部分
-        self.menu_label = ttk.Label(self.menu_frame, text=LANGUAGES[self.current_lang]["menu"], 
+        self.menu_label = ttk.Label(self.title_frame, text=LANGUAGES[self.current_lang]["menu"], 
                                     font=('Arial', 16, 'bold'))
         self.menu_label.pack()
 
@@ -463,6 +445,26 @@ class POSView:
         # 訂單部分與 notebook
         self.order_label = ttk.Label(self.order_frame, text="Current Order", font=('Arial', 16, 'bold'))
         self.order_label.pack()
+        
+        self.language_frame = ttk.Frame(self.title_frame)
+        self.language_frame.pack()  # Frame 也用 grid
+
+
+        self.label_choose_language = ttk.Label(self.language_frame, 
+                                                text=LANGUAGES[self.current_lang]["choose_language"],
+                                                font=("Arial", 10))
+        self.label_choose_language.grid(row=0, column=0, padx=(0, 5), sticky="w")
+
+        self.language_var = tk.StringVar(self.root)
+        self.language_var.set(self.current_lang)  # 預設語言
+
+
+        self.language_menu = ttk.OptionMenu(self.language_frame, 
+            self.language_var,
+            *LANGUAGES.keys(), 
+            command=self.change_language)
+        self.language_menu.grid(row=0, column=1, padx=5, sticky="e")
+        self.update_language_menu()
         
         # 訂單控制項
         order_config_frame = ttk.Frame(self.order_frame)

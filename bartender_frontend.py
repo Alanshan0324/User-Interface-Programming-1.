@@ -1,7 +1,105 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from bartender_backend import BartenderController, Employee
+import subprocess
+import sys
+LANGUAGES = {
+    'en': {  # English
+       
+        'logout': "Logout",
+        'create_order_button': "Create Order",
+        'add_item_button': "Add Item to Order",
+        'remove_item_button': "Remove Item from Order",
+        'finish_order_button': "Finish Order",
+        'undo_button': "Undo",
+        'redo_button': "Redo",
+        'language_label': "Language",
+        'product_label': "Products",
+        'sort_label': "Sort by:",
+        'product_id_label': "Product ID:",
+        'new_price_label': "New Price:",
+        'new_stock_label': "New Stock:",
+        'quantity_label': "Quantity:",
+        'remove_quantity_label': "Quantity to Remove:",
+        'current_order_label': "Current Order:",
+        'order_management_label': "--- Order Management ---",
+        'refill_low_stock_button': "Refill Low Stock Items",
+        'alert_security_button': "Alert Security",
+        'refresh_products_button': "Refresh Products",
+        'modify_price_button': "Modify Price",
+        'remove_product_button': "Remove Product",
+        'update_stock_button': "Update Stock",
+        "order_undo": "Order Undo",
+        "order_redo": "Order Redo",
+        "current_order": "Current Order:",
+        # 其他按鈕和標籤文字...
+    },
+    'zh': {  # 中文
+        
+        'logout': "登出",
+        'create_order_button': "創建訂單",
+        'add_item_button': "添加項目",
+        'remove_item_button': "移除項目",
+        'finish_order_button': "完成訂單",
+        'undo_button': "撤銷",
+        'redo_button': "重做",
+        'language_label': "語言",
+        'product_label': "產品",
+        'sort_label': "排序方式:",
+        'product_id_label': "產品 ID:",
+        'new_price_label': "新價格:",
+        'new_stock_label': "新庫存:",
+        'quantity_label': "數量:",
+        'remove_quantity_label': "移除數量:",
+        'current_order_label': "當前訂單:",
+        'order_management_label': "--- 訂單管理 ---",
+        'refill_low_stock_button': "補充低庫存商品",
+        'alert_security_button': "警報安全",
+        'refresh_products_button': "刷新產品",
+        'modify_price_button': "修改價格",
+        'remove_product_button': "移除產品",
+        'update_stock_button': "更新庫存",
+        "order_undo": "訂單撤銷",
+        "order_redo": "訂單重做",
+        "current_order": "當前訂單:",
 
+        # 其他按鈕和標籤文字...
+    },
+    'sv': {  # Swedish
+        
+        'logout': "Logga ut",
+        'create_order_button': "Skapa Order",
+        'add_item_button': "Lägg till Artikel",
+        'remove_item_button': "Ta bort Artikel",
+        'finish_order_button': "Avsluta Order",
+        'undo_button': "Ångra",
+        'redo_button': "Gör om",
+        'language_label': "Språk",
+        'product_label': "Produkter",
+        'sort_label': "Sortera efter:",
+        'product_id_label': "Produkt ID:",
+        'new_price_label': "Nytt Pris:",
+        'new_stock_label': "Nytt Lager:",
+        'quantity_label': "Kvantitet:",
+        'remove_quantity_label': "Kvantitet att Ta Bort:",
+        'current_order_label': "Aktuell Order:",
+        'order_management_label': "--- Orderhantering ---",
+        'refill_low_stock_button': "Fyll på Lågt Lager",
+        'alert_security_button': "Larma Säkerhet",
+        'refresh_products_button': "Uppdatera Produkter",
+        'modify_price_button': "Ändra Pris",
+        'remove_product_button': "Ta Bort Produkt",
+        'update_stock_button': "Upp",
+        "order_undo": "OrderÅngra",
+        "order_redo": "OrderGör om",
+        "current_order": "Aktuell Order:",
+
+
+
+        # 其他按鈕和標籤文字...
+    }
+}
 
 class BartenderFrontend:
     def __init__(self, controller):
@@ -10,6 +108,14 @@ class BartenderFrontend:
         self.root.geometry("1430x1000")
         self.root.title("Bartender Frontend")
         self.root.minsize(600, 400)  # 設置最小視窗大小
+        self.current_language = 'en'
+        self.language_var = tk.StringVar(value=self.current_language)
+
+
+
+       
+
+
 
         # 定義響應式設計的斷點
         self.breakpoints = {
@@ -33,20 +139,45 @@ class BartenderFrontend:
         self.product_frame.columnconfigure(0, weight=1)
         self.product_frame.columnconfigure(1, weight=1)
 
-        tk.Label(self.product_frame, text="Products", font=("Helvetica", 14)).grid(row=0, column=0, sticky="w", padx=5,
-                                                                                   pady=5)
+        self.product_label= tk.Label(self.product_frame, text=self.controller.get_translation('product_label'), font=("Helvetica", 14))
+        self.product_label.grid(row=0, column=0, sticky="w", padx=5,pady=5)
+          # 語言選擇框架
+        
+
+        # 語言標籤
+        self.language_label = ttk.Label(self.product_frame, text="Language:", font=("Arial", 10))
+        self.language_label.grid(row=0, column=0, padx=(0, 5), sticky="e")
+        self.language_var = tk.StringVar()
+        
+        # Set default value
+        self.language_var.set(list(LANGUAGES.keys())[0])
+        
+        # 使用 OptionMenu 替代 Combobox
+        self.language_menu = tk.OptionMenu(self.product_frame,
+                                        self.language_var,   
+                                        *LANGUAGES.keys()
+                                        ,command=self.change_language)
+
+        
+        self.language_menu.grid(row=0, column=1, padx=(0, 5), sticky="w")
+       
+        
+        
+        
+                                         
         self.sort_var = tk.StringVar(value="Name")
-        tk.Label(self.product_frame, text="Sort by:").grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        self.sort_label =  tk.Label(self.product_frame, text=self.controller.get_translation('sort_label'))
+        self.sort_label.grid(row=0, column=1, sticky="e", padx=5, pady=5)
         sort_options = ["Name", "Price", "Stock", "Availability"]
         self.sort_menu = tk.OptionMenu(self.product_frame, self.sort_var, *sort_options,
                                        command=lambda _: self.refresh_products())
-        self.sort_menu.grid(row=0, column=1, sticky="e", padx=5, pady=5)
+        self.sort_menu.grid(row=0, column=2, sticky="e", padx=5, pady=5)
 
         self.product_listbox = tk.Listbox(self.product_frame)
         self.product_listbox.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=5, pady=5)
         self.product_listbox.bind("<<ListboxSelect>>", self.on_product_select)
-        tk.Button(self.product_frame, text="Refresh Products", command=self.refresh_products) \
-            .grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
+        self.refresh_products_button = tk.Button(self.product_frame, text=self.controller.get_translation('refresh_products_button'), command=self.refresh_products) 
+        self.refresh_products_button.grid(row=2, column=0, columnspan=2, sticky="ew", padx=5, pady=5)
 
         # --- 控制框架 ---
         self.control_frame = tk.Frame(self.root, bd=2, relief=tk.SUNKEN)
@@ -56,89 +187,94 @@ class BartenderFrontend:
             self.control_frame.rowconfigure(i, weight=1)
 
         row = 0
-        tk.Label(self.control_frame, text="Product ID:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        self.product_id_label = tk.Label(self.control_frame, text=self.controller.get_translation('product_id_label'))
+        self.product_id_label.grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
         self.entry_product_id = tk.Entry(self.control_frame)
-        self.entry_product_id.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.entry_product_id.grid(row=row, column=0, sticky="ew", padx=5, pady=2)
         row += 1
 
-        tk.Label(self.control_frame, text="New Price:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        self.new_price_label = tk.Label(self.control_frame, text=self.controller.get_translation('new_price_label'))
+        self.new_price_label.grid(row=row, column=0, sticky="w", padx=5, pady=2)
         row += 1
         self.entry_new_cahse = tk.Entry(self.control_frame)
         self.entry_new_cahse.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Modify Price", command=self.modify_price) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.modify_price_button = tk.Button(self.control_frame, text=self.controller.get_translation('modify_price_button'), command=self.modify_price) 
+        self.modify_price_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Button(self.control_frame, text="Remove Product", command=self.remove_product) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.remove_product_button = tk.Button(self.control_frame, text=self.controller.get_translation('remove_product_button'), command=self.remove_product) 
+        self.remove_product_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="New Stock:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        self.new_stock_label = tk.Label(self.control_frame, text=self.controller.get_translation('new_stock_label'))
+        self.new_stock_label.grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
         self.entry_new_stock = tk.Entry(self.control_frame)
         self.entry_new_stock.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Update Stock", command=self.update_stock) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.update_stock_button = tk.Button(self.control_frame, text=self.controller.get_translation('update_stock_button'), command=self.update_stock) 
+        self.update_stock_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Button(self.control_frame, text="Undo (Global)", command=self.undo) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.undo_button = tk.Button(self.control_frame, text=self.controller.get_translation('undo_button'), command=self.undo) 
+        self.undo_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2)
         row += 1
-        tk.Button(self.control_frame, text="Redo (Global)", command=self.redo) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.redo_button = tk.Button(self.control_frame,  text=self.controller.get_translation('redo_button'), command=self.redo) 
+        self.redo_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         # 補充低庫存商品按鈕
-        tk.Button(self.control_frame, text="Refill Low Stock Items", command=self.refill_low_stock) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.refill_low_stock_button = tk.Button(self.control_frame, text=self.controller.get_translation('refill_low_stock_button'), command=self.refill_low_stock) 
+        self.refill_low_stock_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         # 警報安全
-        tk.Button(self.control_frame, text="Alert Security", command=self.alert_security) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.alert_security_button = tk.Button(self.control_frame, text=self.controller.get_translation('alert_security_button'), command=self.alert_security) 
+        self.alert_security_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
         # --- 訂單管理控制 ---
-        tk.Label(self.control_frame, text="--- Order Management ---", fg="darkgreen") \
-            .grid(row=row, column=0, sticky="w", padx=5, pady=5);
+        self.order_management_label = tk.Label(self.control_frame, text=self.controller.get_translation('order_management_label'), fg="darkgreen") 
+        self.order_management_label.grid(row=row, column=0, sticky="w", padx=5, pady=5);
         row += 1
-        tk.Button(self.control_frame, text="Create New Order", command=self.create_order) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.create_order_button = tk.Button(self.control_frame, text=self.controller.get_translation('create_order_button'), command=self.create_order) 
+        self.create_order_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2)
         row += 1
-
-        tk.Label(self.control_frame, text="Quantity:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+       
+        self.quantity_label = tk.Label(self.control_frame, text=self.controller.get_translation('quantity_label'))
+        self.quantity_label.grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
         self.entry_quantity = tk.Entry(self.control_frame)
         self.entry_quantity.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Add Item to Order", command=self.add_item_to_order) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.add_item_button = tk.Button(self.control_frame, text=self.controller.get_translation('add_item_button'), command=self.add_item_to_order) 
+        self.add_item_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="Quantity to Remove:").grid(row=row, column=0, sticky="w", padx=5, pady=2);
+        self.remove_quantity_label = tk.Label(self.control_frame,text=self.controller.get_translation('remove_quantity_label'))
+        self.remove_quantity_label.grid(row=row, column=0, sticky="w", padx=5, pady=2);
         row += 1
         self.entry_remove_quantity = tk.Entry(self.control_frame)
         self.entry_remove_quantity.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Remove Item from Order", command=self.remove_item_from_order) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.remove_item_button = tk.Button(self.control_frame, text=self.controller.get_translation('remove_item_button'), command=self.remove_item_from_order) 
+        self.remove_item_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Button(self.control_frame, text="Finish Order", command=self.finish_order) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.finish_order_button = tk.Button(self.control_frame, text=self.controller.get_translation('finish_order_button'), command=self.finish_order) 
+        self.finish_order_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Order Undo", command=self.order_undo) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.order_undo_button = tk.Button(self.control_frame, text=self.controller.get_translation('order_undo'), command=self.order_undo) 
+        self.order_undo_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
-        tk.Button(self.control_frame, text="Order Redo", command=self.order_redo) \
-            .grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        self.order_redo_button = tk.Button(self.control_frame, text=self.controller.get_translation('order_redo'), command=self.order_redo) 
+        self.order_redo_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
         row += 1
 
-        tk.Label(self.control_frame, text="Current Order:", fg="purple") \
-            .grid(row=row, column=0, sticky="w", padx=5, pady=5);
+        self.current_order_label = tk.Label(self.control_frame, text=self.controller.get_translation('current_order'), fg="purple") 
+        self.current_order_label.grid(row=row, column=0, sticky="w", padx=5, pady=5);
         row += 1
         self.order_listbox = tk.Listbox(self.control_frame)
         self.order_listbox.grid(row=row, column=0, sticky="nsew", padx=5, pady=2);
@@ -146,7 +282,11 @@ class BartenderFrontend:
 
         self.status_label = tk.Label(self.control_frame, text="", fg="blue")
         self.status_label.grid(row=row, column=0, sticky="w", padx=5, pady=5)
-        
+
+        self.logout_button = tk.Button(self.control_frame, text=self.controller.get_translation('logout'), command=self.logout) 
+        self.logout_button.grid(row=row, column=0, sticky="ew", padx=5, pady=2);
+        row += 1
+        self
         # 存儲所有標籤和按鈕，用於響應式設計調整
         self.all_labels = []
         for widget in self.product_frame.winfo_children():
@@ -172,6 +312,9 @@ class BartenderFrontend:
 
         self.refresh_products()
         self.refresh_order()
+        self.update_ui_texts()
+        
+        
 
     def refresh_products(self):
         self.product_listbox.delete(0, tk.END)
@@ -327,6 +470,15 @@ class BartenderFrontend:
 
     def alert_security(self):
         self.status_label.config(text="Security alert sent.")
+    def logout(self):
+        """登出並回到登入介面"""
+        confirm = messagebox.askyesno("Logout", "Are you sure you want to logout?")
+        if confirm:
+            
+   
+            self.root.quit()  # 結束 Tkinter 事件循環
+            self.root.destroy()  # 銷毀 Tkinter 主視窗
+            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動新視窗
         
     def on_window_resize(self, event):
         """處理視窗大小調整事件，應用響應式佈局"""
@@ -481,12 +633,65 @@ class BartenderFrontend:
         for button in self.all_buttons:
             button.grid_configure(padx=5, pady=2)
 
+    
+
+   
+   
+    def change_language(self, select_language):
+        
+        self.current_language = select_language
+        selected_language = self.language_var.get()
+        self.update_ui_texts()  # 更新 UI 文字
+
+
+    def update_ui_texts(self):
+        # 更新按鈕文字
+        
+        print(" update_ui_texts() 被呼叫了！")  # 測試：確認這個方法有執行
+        self.controller.current_language = self.current_language
+        self.update_stock_button.config(text=self.controller.get_translation('update_stock_button'))
+        self.create_order_button.config(text=self.controller.get_translation('create_order_button'))
+        self.add_item_button.config(text=self.controller.get_translation('add_item_button'))
+        self.remove_item_button.config(text=self.controller.get_translation('remove_item_button'))
+        self.finish_order_button.config(text=self.controller.get_translation('finish_order_button'))
+        self.undo_button.config(text=self.controller.get_translation('undo_button'))
+        self.redo_button.config(text=self.controller.get_translation('redo_button'))
+        self.refill_low_stock_button.config(text=self.controller.get_translation('refill_low_stock_button'))
+        self.alert_security_button.config(text=self.controller.get_translation('alert_security_button'))
+        self.order_undo_button.config(text=self.controller.get_translation('order_undo'))
+        self.order_redo_button.config(text=self.controller.get_translation('order_redo'))
+        self.refresh_products_button.config(text=self.controller.get_translation('refresh_products_button'))
+        self.modify_price_button.config(text=self.controller.get_translation('modify_price_button'))
+        self.remove_product_button.config(text=self.controller.get_translation('remove_product_button'))
+        self.logout_button.config(text=self.controller.get_translation('logout'))
+
+        # 更新標籤文字
+        self.language_label.config(text=self.controller.get_translation('language_label'))
+        self.product_label.config(text=self.controller.get_translation('product_label'))
+        self.sort_label.config(text=self.controller.get_translation('sort_label'))
+        self.product_id_label.config(text=self.controller.get_translation('product_id_label'))
+        self.new_price_label.config(text=self.controller.get_translation('new_price_label'))
+        self.new_stock_label.config(text=self.controller.get_translation('new_stock_label'))
+        self.quantity_label.config(text=self.controller.get_translation('quantity_label'))
+        self.remove_quantity_label.config(text=self.controller.get_translation('remove_quantity_label'))
+        self.current_order_label.config(text=self.controller.get_translation('current_order_label'))
+        self.order_management_label.config(text=self.controller.get_translation('order_management_label'))
+        
+        
+        
+        
+    
+
+
+
+
     def run(self):
         self.root.mainloop()
 
 
 if __name__ == "__main__":
     employee = Employee(1001, "Alice", "Bartender")
+    
     controller = BartenderController(employee)
     controller.login_employee()
     frontend = BartenderFrontend(controller)
