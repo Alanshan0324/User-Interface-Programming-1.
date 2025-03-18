@@ -1,4 +1,4 @@
-# models.py
+from datetime import datetime
 
 class Product:
     def __init__(self, id, name, producer, country, type_, strength, serving_size, price, stock_count):
@@ -10,8 +10,11 @@ class Product:
         self.strength = strength
         self.serving_size = serving_size
         self.price = price
-        self.stock_count = stock_count
-        self.available = True  # Determines if the product is shown on the menu
+        self.stock_count = int(stock_count)
+        self.available = True
 
     def __repr__(self):
-        return f"Product({self.name}, Price: {self.price}, Stock: {self.stock_count}, Available: {self.available})"
+        return (f"Product(id={self.id}, name='{self.name}', producer='{self.producer}', "
+                f"country='{self.country}', type_='{self.type_}', strength='{self.strength}', "
+                f"serving_size='{self.serving_size}', price='{self.price}', stock_count={self.stock_count}, "
+                f"available={self.available})")

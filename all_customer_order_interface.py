@@ -1,4 +1,8 @@
-# model
+# all_customer_order_interface.py
+from data_import import import_products
+from controller import *
+
+
 class MenuItem:
     def __init__(self, id, name, price, category):
         self.id = id
@@ -1325,7 +1329,7 @@ class POSController:
 
         # Set the language model to the view
         self.view.set_menu_model(self.menu_model)
-        
+
         # Set language change callback
         self.view.set_on_language_change_callback(self.on_language_change)
 
@@ -1348,7 +1352,7 @@ class POSController:
 
         # Initialize order
         self.reset_order()
-        
+
         # Initialize menu display
         self.initialize_menu()
 
@@ -1363,18 +1367,18 @@ class POSController:
         # Find the corresponding menu item
         menu_items = self.menu_model.get_menu_items()
         target_item = next((item for item in menu_items if item.name == item_name), None)
-        
+
         if target_item:
             # Remove from order
             people_count = self.view.people_count.get()
-            
+
             if people_count > 1 and person_index is not None:
                 # Remove from the specified person's order
                 self.current_order.remove_item(target_item.id, sub_order_index=person_index)
             else:
                 # Remove from total order
                 self.current_order.remove_item(target_item.id)
-                
+
             # Update Display
             self.update_all_displays()
 
@@ -1382,18 +1386,18 @@ class POSController:
         # Find the corresponding menu item
         menu_items = self.menu_model.get_menu_items()
         target_item = next((item for item in menu_items if item.name == item_name), None)
-        
+
         if target_item:
             # Reduce quantity from order (remove 1)
             people_count = self.view.people_count.get()
-            
+
             if people_count > 1 and person_index is not None:
                 # Reduce from the order of the designated person
                 self.current_order.remove_item(target_item.id, quantity=1, sub_order_index=person_index)
             else:
                 # Subtract from total order
                 self.current_order.remove_item(target_item.id, quantity=1)
-                
+
             # Update Display
             self.update_all_displays()
 
@@ -1436,7 +1440,7 @@ class POSController:
     def update_all_displays(self):
         all_items = self.current_order.get_all_items()
         split_bills = self.current_order.get_split_bills()
-        self.view.update_order_display(all_items, self.current_order.total, split_bills)        
+        self.view.update_order_display(all_items, self.current_order.total, split_bills)
 
     def update_person_spinbox_range(self):
         current_count = self.view.people_count.get()
@@ -1453,7 +1457,7 @@ class POSController:
                 self.current_order.add_item(menu_item)
 
             self.update_all_displays()
-            
+
     def split_bill(self):
         if self.view.people_count.get() <= 1:
             self.view.show_message(self.language_model.get_text("not_group_order"))
@@ -1468,7 +1472,7 @@ class POSController:
 
     def clear_order(self):
         self.reset_order()
-        self.view.people_count.set(1)  
+        self.view.people_count.set(1)
         self.update_person_spinbox_range()
 
     def checkout(self):
@@ -1478,35 +1482,42 @@ class POSController:
 
         # Set table number from view
         self.current_order.table_number = self.view.table_number.get() if self.view.table_number.get() else None
-        
+
         table_info = f" {self.language_model.get_text('for_table')} {self.current_order.table_number}" if self.current_order.table_number else ""
         group_info = f" ({self.language_model.get_text('group_order')})" if self.current_order.is_group_order() else ""
 
         self.view.show_message(f"{self.language_model.get_text('order')}{table_info}{group_info} {self.language_model.get_text('completed')}! {self.language_model.get_text('total')}: ${self.current_order.total:.2f}")
         self.clear_order()
 
-# main
+
 def main():
     import tkinter as tk
     from tkinter import ttk
-    
+
     root = tk.Tk()
-    
-    # Create a highlighted drop-down are  a style
+
+    # Create a style for highlighted drop zones.
     style = ttk.Style()
     style.configure("Highlight.TLabelframe", background="lightblue")
-    
-    # Initialize the model
+
+    # Initialize the static menu model and language model.
     menu_model = MenuModel()
     language_model = LanguageModel()
-    
-    # Initialize the view (inject the language model)
+
+    # Initialize the view (POSView) and pass in the language model.
     view = POSView(root, language_model)
-    
-    # Initializing the Controller
-    controller = POSController(menu_model, view, language_model)
-    
+
+    # Create an Employee instance (adjust the details as needed).
+    employee = Employee(2001, "VIP Customer", "VIP")
+
+    # Initialize the unified controller.
+    controller = Controller(employee, menu_model, view, language_model)
+
+    # At this point, the controller has set up all callbacks in the view,
+    # and the unified backend is used for all product and order operations.
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()
+

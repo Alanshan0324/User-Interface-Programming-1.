@@ -101,27 +101,32 @@ def import_beers(file_path):
 
 def import_products(file_path):
     """
-    Import beverages from the specified JSON file and return a list of tuples:
-    [(Name, Price, Category)]
+    Imports products from a JSON file and returns a list of Product objects.
 
-    The expected JSON format is a list of dictionaries, where:
-      - "namn" represents the beverage name,
-      - "prisinklmoms" represents the price (as a string, with commas as decimal separators),
-      - "varugrupp" represents the category of the beverage.
+    Args:
+        file_path (str): The path to the JSON file containing product data.
+
+    Returns:
+        list: A list of Product objects.
     """
-    data = load_json_file(file_path)
-    beverages = []
-    for entry in data:
-        name = entry.get("namn", "Unknown")
-        price_str = entry.get("prisinklmoms", "0").replace(",", ".")
-        try:
-            price = float(price_str)
-        except ValueError:
-            price = 0.0
-        #category = entry.get("varugrupp", "Unknown")
-        category = "Alcoholic Drinks"
-        beverages.append((name, price, category))
-    return beverages
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    products = []
+    for item in data:
+        product = Product(
+            id=item.get("id"),
+            name=item.get("name"),
+            producer=item.get("producer"),
+            country=item.get("country"),
+            type_=item.get("type_"),
+            strength=item.get("strength"),
+            serving_size=item.get("serving_size"),
+            price=item.get("price"),
+            stock_count=item.get("stock_count")
+        )
+        products.append(product)
+    return products
 
 
 def import_users(file_path):
@@ -141,19 +146,8 @@ if __name__ == "__main__":
     beers_bought = import_beers_bought('DBFilesJSON/dutchman_table_beers_bought.json')
     beers_sold = import_beers_sold('DBFilesJSON/dutchman_table_beers_sold.json')
     payments = import_payments('DBFilesJSON/dutchman_table_payments.json')
-    products = import_beers('DBFilesJSON/dutchman_table_sbl_beer.json')
-    beverages = import_products('DBFilesJSON/dutchman_table_sbl_beer.json')
+    beers = import_beers('DBFilesJSON/dutchman_table_sbl_beer.json')
+    products = import_products('DBFilesJSON/products.json')
     users = import_users('DBFilesJSON/dutchman_table_users.json')
 
-    print(beverages)
-    #print("Beers Bought:")
-    #print(beers_bought)
-    #print("\nBeers Sold:")
-    #print(beers_sold)
-    #print("\nPayments:")
-    #print(payments)
-    #print("\nProducts:")
-    #for product in products.values():
-    #    print(product)
-    #print("\nUsers:")
-    #print(users)
+    print(products)
