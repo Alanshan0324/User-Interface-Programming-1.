@@ -1511,7 +1511,8 @@ def main():
     employee = Employee(2001, "VIP Customer", "VIP")
 
     # Initialize the unified controller.
-    controller = Controller(employee, menu_model, view, language_model)
+    #controller = Controller(employee, menu_model, view, language_model)
+    controller = POSController(menu_model, view, language_model)
 
     # At this point, the controller has set up all callbacks in the view,
     # and the unified backend is used for all product and order operations.

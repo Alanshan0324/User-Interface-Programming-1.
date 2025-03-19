@@ -338,7 +338,7 @@ class BartenderFrontend:
 
         for p in products:
             warning = " *** LOW STOCK ***" if int(p.stock_count) < 5 else ""
-            text = (f"ID: {p.id} | {p.name} | Price: {p.price} | Stock: {p.stock_count} | "
+            text = (f"ID: {p.id} | {p.name} | Price: {p.price} | Stock: {p.stock_count} | Producer: {p.producer} | Country: {p.country} | Type: {p.type_} | Strength: {p.strength} | Serving size: {p.serving_size} "
                     f"Available: {p.available}{warning}")
             self.product_listbox.insert(tk.END, text)
 
