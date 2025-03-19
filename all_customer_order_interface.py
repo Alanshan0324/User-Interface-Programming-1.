@@ -1,6 +1,7 @@
 # all_customer_order_interface.py
 from data_import import import_products
 from controller import *
+import subprocess, sys
 
 
 class MenuItem:
@@ -119,6 +120,7 @@ class LanguageModel:
                 "split_bill": "Split Bill",
                 "total": "Total",
                 "order": "Order",
+                "logout": "Log Out",
                 "quantity": "Quantity",
                 "person": "Person",
                 "persons": "Persons",
@@ -161,6 +163,7 @@ class LanguageModel:
                 "printing_bills": "正在列印帳單...",
                 "close": "關閉",
                 "checkout": "結帳",
+                "logout": "登出",
                 "all": "全部",
                 "choose_person": "選擇顧客"
             },
@@ -201,6 +204,7 @@ class LanguageModel:
                 "printing_bills": "Skriver ut notor...",
                 "close": "Stäng",
                 "checkout": "Betala",
+                "logout": "Logga ut",
                 "all": "Alla",
                 "choose_person": "Välj Person"
             }
@@ -531,6 +535,9 @@ class POSView:
 
         self.delete_button = ttk.Button(self.button_frame, text=self.get_text("delete_item"))
         self.delete_button.pack(side=tk.LEFT, padx=5)
+
+        self.logout_button = ttk.Button(self.button_frame, text=self.get_text("logout"))
+        self.logout_button.pack(side=tk.RIGHT, padx=5)
         
         # Dictionary used to store menu item widgets
         self.menu_item_widgets = {}
@@ -1321,11 +1328,12 @@ class POSView:
 
 # controller
 class POSController:
-    def __init__(self, menu_model, view, language_model):
+    def __init__(self, menu_model, view, language_model,root):
         self.menu_model = menu_model
         self.view = view
         self.language_model = language_model
         self.current_order = Order()
+        self.root = root
 
         # Set the language model to the view
         self.view.set_menu_model(self.menu_model)
@@ -1346,6 +1354,7 @@ class POSController:
         self.view.add_person_btn.config(command=self.add_person)
         self.view.remove_person_btn.config(command=self.remove_person)
         self.view.selected_category.trace("w", self.on_category_change)
+        self.view.logout_button.config(command=self.logout_funtion)
 
         # Set category change callback
         self.view.on_category_change_callback = self.on_category_change
@@ -1358,6 +1367,17 @@ class POSController:
 
         # Update the number of people to select
         self.update_person_spinbox_range()
+    def logout_funtion(self):
+        confirm = messagebox.askyesno(
+            self.view.get_text("logout"),
+            self.view.get_text("confirm_logout")
+        )
+        if confirm:
+            self.root.quit()  # 結束 Tkinter 事件循環
+            self.root.destroy()  # 銷毀 Tkinter 主視窗
+            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動登入視窗
+
+        
 
     def on_language_change(self):
         self.initialize_menu()
@@ -1511,8 +1531,8 @@ def main():
     employee = Employee(2001, "VIP Customer", "VIP")
 
     # Initialize the unified controller.
-    controller = Controller(employee, menu_model, view, language_model)
-
+    #controller = Controller(employee, menu_model, view, language_model)
+    controller = POSController(menu_model, view, language_model,root)
     # At this point, the controller has set up all callbacks in the view,
     # and the unified backend is used for all product and order operations.
     root.mainloop()
