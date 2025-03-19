@@ -6,7 +6,7 @@ import subprocess, sys, random
 
 LANGUAGES = {
     "English": {
-        "choose_language": "Choose Language:",
+        "choose_language": "Choose Language:", 
         "menu": "Menu",
         "current_order": "Current Order",
         "total": "Total",
@@ -274,9 +274,12 @@ class Order:
         is_group = len(self.sub_orders) > 0 or sub_order_index is not None
         
         if is_group:
-            while len(self.sub_orders) <= (sub_order_index or 0):
+            if sub_order_index is None:
+                sub_order_index = 0  # Default to the first sub-order if not specified
+
+            while len(self.sub_orders) <= sub_order_index:
                 self.sub_orders.append([])
-            
+
             self.sub_orders[sub_order_index].append((item, quantity))
         else:
             self.items.append((item, quantity))
@@ -287,39 +290,39 @@ class Order:
         is_group = len(self.sub_orders) > 0
 
         if is_group and sub_order_index is not None:
-            # 檢查子訂單索引是否有效
+            # Check if the sub-order index is valid
             if sub_order_index >= len(self.sub_orders):
                 return False
 
-            # 在子訂單中查找項目
+            # Find the item in the sub-order
             for i, (item, item_qty) in enumerate(self.sub_orders[sub_order_index]):
                 if item.id == item_id:
-                    # 如果要移除的數量少於項目數量，則減少數量
+                    # If the quantity to remove is less than the item's quantity, decrease the quantity
                     if quantity < item_qty:
                         self.sub_orders[sub_order_index][i] = (item, item_qty - quantity)
                         self.total -= item.price * quantity
-                    # 否則刪除整個項目
+                    # Otherwise, remove the entire item
                     else:
-                        actual_qty = item_qty  # 實際刪除數量不超過現有數量
+                        actual_qty = item_qty  # Actual quantity removed does not exceed the existing quantity
                         self.sub_orders[sub_order_index].pop(i)
                         self.total -= item.price * actual_qty
                     return True
         else:
-            # 在常規訂單中查找此項目
+            # Find the item in the regular order
             for i, (item, item_qty) in enumerate(self.items):
                 if item.id == item_id:
-                    # 如果要移除的數量少於項目數量，則減少數量
+                    # If the quantity to remove is less than the item's quantity, decrease the quantity
                     if quantity < item_qty:
                         self.items[i] = (item, item_qty - quantity)
                         self.total -= item.price * quantity
-                    # 否則刪除整個項目
+                    # Otherwise, remove the entire item
                     else:
-                        actual_qty = item_qty  # 實際刪除數量不超過現有數量
+                        actual_qty = item_qty  # Actual quantity removed does not exceed the existing quantity
                         self.items.pop(i)
                         self.total -= item.price * actual_qty
                     return True
 
-        return False  # 項目未找到
+        return False  # Item not found
 
     def is_group_order(self):
         return len(self.sub_orders) > 0
@@ -352,17 +355,17 @@ class SpecialLocker:
         self.lock_code = self.generate_code()
 
     def generate_code(self):
-        return random.randint(1000, 9999)  # 生成 4 位數密碼
+        return random.randint(1000, 9999)  # Generate a 4-digit code
 
     def verify_code(self, code):
         return code == self.lock_code
 
     def update_code(self):
-        self.lock_code = self.generate_code()  # 成功購買後更新密碼
+        self.lock_code = self.generate_code()  # Update the code after a successful purchase
 
 class MenuModel:
     def __init__(self):
-        # 樣本菜單數據
+        # Sample menu data
         self.vip_account = 100.00
         self.locker = SpecialLocker()
 
@@ -463,7 +466,7 @@ class MenuModel:
         return next((item for item in self.menu_items if item.id == item_id), None)
 
     def get_translated_category(self, category, language):
-        """獲取翻譯後的類別名稱"""
+       
         if language in LANGUAGES and "categories" in LANGUAGES[language]:
             return LANGUAGES[language]["categories"].get(category, category)
         return category
@@ -479,51 +482,51 @@ class POSView:
         self.current_lang = "English"
         self.root.title("VIP POS System")
         self.root.geometry("1430x600")
-        self.root.minsize(600, 400)  # 設置最小視窗大小
+        self.root.minsize(600, 400)  # Set minimum window size
 
-        # 定義響應式設計的斷點
+        # Define breakpoints for responsive design
         self.breakpoints = {
-            "mobile": 800,    # 寬度小於 800px 時使用手機佈局
-            "tablet": 1200    # 寬度介於 800px 到 1200px 之間時使用平板佈局
+            "mobile": 800,    # Use mobile layout for width less than 800px
+            "tablet": 1200    # Use tablet layout for width between 800px and 1200px
         }
 
-        # 記錄當前的佈局
-        self.current_layout = "desktop"  # 預設桌面佈局
+        # Track the current layout
+        self.current_layout = "desktop"  # Default to desktop layout
 
-        # 設定列權重來控制左右兩邊的比例
-        root.columnconfigure(0, weight=4)  # 菜單佔 4/5
-        root.columnconfigure(1, weight=1)  # 訂單佔 1/5
+        # Set column weights to control the ratio between menu and order sections
+        root.columnconfigure(0, weight=4)  # Menu takes 4/5
+        root.columnconfigure(1, weight=1)  # Order takes 1/5
         root.rowconfigure(0, weight=1)
 
-        # 創建主框架使用 grid 而非 pack
+        # Create main frames using grid instead of pack
         self.menu_frame = ttk.Frame(root)
         self.menu_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
         self.order_frame = ttk.Frame(root)
         self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        # 創建標題框架
+        # Create title frame
         self.title_frame = ttk.Frame(self.menu_frame)
         self.title_frame.pack(fill=tk.X)
 
-        # 菜單標籤
+        # Menu label
         self.menu_label = ttk.Label(self.title_frame, text=self.get_text("menu"),
                                    font=('Arial', 16, 'bold'))
         self.menu_label.pack(side=tk.LEFT, pady=5)
 
-        # 創建語言選擇框架
+        # Create language selection frame
         self.language_frame = ttk.Frame(self.title_frame)
         self.language_frame.pack(side=tk.RIGHT, padx=5, pady=5)
 
-        # 語言選擇標籤
+        # Language selection label
         self.label_choose_language = ttk.Label(self.language_frame,
                                              text=self.get_text("choose_language"),
                                              font=("Arial", 10))
         self.label_choose_language.pack(side=tk.LEFT, padx=(0, 5))
 
-        # 語言選擇下拉選單
+        # Language selection dropdown
         self.language_var = tk.StringVar(self.root)
-        self.language_var.set(self.current_lang)  # 預設語言
+        self.language_var.set(self.current_lang)  # Default language
         
         self.language_menu = ttk.OptionMenu(self.language_frame,
             self.language_var,
@@ -532,26 +535,26 @@ class POSView:
         self.language_menu.pack(side=tk.LEFT)
         self.update_language_menu()
 
-        # 創建菜單類別框架 (更好的視覺組織)
+        # Create menu category frame (better visual organization)
         self.categories_frame = ttk.Frame(self.menu_frame)
         self.categories_frame.pack(fill=tk.X, pady=5)
         
-        # 分為兩行顯示的類別按鈕框架
+        # Two rows for category buttons
         self.categories_row1 = ttk.Frame(self.categories_frame)
         self.categories_row1.pack(fill=tk.X)
         
         self.categories_row2 = ttk.Frame(self.categories_frame)
         self.categories_row2.pack(fill=tk.X, pady=(5, 0))
         
-        # 類別按鈕
+        # Category buttons
         self.category_buttons = {}
         self.selected_category = tk.StringVar(value="All")
         
-        # 菜單項目框架與滾動條
+        # Menu items frame with scrollbar
         self.menu_items_frame = ttk.Frame(self.menu_frame)
         self.menu_items_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # 用於滾動的 Canvas
+        # Canvas for scrolling
         self.menu_canvas = tk.Canvas(self.menu_items_frame)
         self.menu_scrollbar = ttk.Scrollbar(self.menu_items_frame, orient="vertical", command=self.menu_canvas.yview)
         self.menu_scrollable_frame = ttk.Frame(self.menu_canvas)
@@ -567,7 +570,7 @@ class POSView:
         self.menu_canvas.pack(side="left", fill="both", expand=True)
         self.menu_scrollbar.pack(side="right", fill="y")
         
-        # 訂單部分與標籤
+        # Order section and label
         self.order_title_frame = ttk.Frame(self.order_frame)
         self.order_title_frame.pack(fill=tk.X)
         
@@ -575,17 +578,17 @@ class POSView:
                                     font=('Arial', 16, 'bold'))
         self.order_label.pack(pady=5)
         
-        # 訂單控制項
+        # Order controls
         order_config_frame = ttk.Frame(self.order_frame)
         order_config_frame.pack(fill=tk.X, pady=5)
         
-        # 桌號控制
+        # Table number control
         self.table_text = ttk.Label(order_config_frame, text=f"{self.get_text('table_number')}:")
         self.table_text.pack(side=tk.LEFT, padx=5)
         self.table_number = ttk.Entry(order_config_frame, width=5)
         self.table_number.pack(side=tk.LEFT, padx=5)
         
-        # 團體人數控制
+        # Group size control
         self.group_control_frame = ttk.Frame(order_config_frame)
         self.group_control_frame.pack(side=tk.LEFT, padx=10)
         
@@ -601,7 +604,7 @@ class POSView:
         self.remove_person_btn = ttk.Button(self.group_control_frame, text="-", width=2)
         self.remove_person_btn.pack(side=tk.LEFT, padx=2)
 
-        # 添加人員選擇器
+        # Add person selector
         self.current_person = tk.IntVar(value=1)
         self.choose_person_text = ttk.Label(self.group_control_frame, text=f"{self.get_text('choose_person')}:")
         self.choose_person_text.pack(side=tk.LEFT, padx=5)
@@ -614,24 +617,24 @@ class POSView:
         )
         self.person_spinbox.pack(side=tk.LEFT, padx=5)
         
-        # 創建 notebook
+        # Create notebook
         self.order_notebook = ttk.Notebook(self.order_frame)
         self.order_notebook.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # 總訂單頁籤
+        # Total order tab
         self.total_order_frame = ttk.Frame(self.order_notebook)
         self.order_notebook.add(self.total_order_frame, text=self.get_text("total_order"))
         
-        # 創建拖放區域框架
+        # Create drop area frame
         self.drop_frame = ttk.LabelFrame(self.total_order_frame, text=self.get_text("drop_items_here"))
         self.drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
         
-        # 拖放區域的標籤
+        # Drop area label
         self.drop_label = ttk.Label(self.drop_frame, text=self.get_text("drag_hint"),
                                   font=('Arial', 10), foreground='gray')
         self.drop_label.pack(pady=20)
         
-        # 創建總訂單樹狀視圖
+        # Create total order treeview
         self.order_tree = ttk.Treeview(self.total_order_frame, columns=('Name', 'Quantity', 'Price'), show='headings')
         self.order_tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
        
@@ -639,27 +642,27 @@ class POSView:
         self.order_tree.heading('Quantity', text=self.get_text("order_table")["quantity"])
         self.order_tree.heading('Price', text=self.get_text("order_table")["price"])
 
-        # 設置列寬
+        # Set column widths
         self.order_tree.column('Name', width=150, minwidth=100)
         self.order_tree.column('Quantity', width=80, minwidth=60)
         self.order_tree.column('Price', width=100, minwidth=80)
         
-        # 個人訂單框架 (將動態填充)
-        self.individual_trees = {}  # 儲存每個人的樹狀視圖
+        # Individual order frames (to be dynamically populated)
+        self.individual_trees = {}  # Store treeviews for each person
         
-        # 創建訂單摘要框架
+        # Create order summary frame
         self.summary_frame = ttk.Frame(self.order_frame)
         self.summary_frame.pack(fill=tk.X, pady=5)
 
-        # 總計與冰箱解鎖框架
+        # Total and fridge unlock frame
         self.total_frame = ttk.Frame(self.summary_frame)
         self.total_frame.pack(fill=tk.X, pady=5)
 
-        # 總計標籤
+        # Total label
         self.total_label = ttk.Label(self.total_frame, text=f"{self.get_text('total')}: $0.00", font=('Arial', 14))
         self.total_label.pack(side=tk.LEFT, padx=10)
 
-        # 鎖櫃密碼標籤
+        # Locker code label
         self.locker_frame = ttk.Frame(self.summary_frame)
         self.locker_frame.pack(fill=tk.X, pady=5)
 
@@ -668,19 +671,19 @@ class POSView:
                                          font=('Arial', 12))
         self.locker_code_label.pack(side=tk.LEFT, padx=10)
 
-        # 密碼輸入框
+        # Password entry
         self.unlock_entry = ttk.Entry(self.locker_frame, width=6, show="*")
         self.unlock_entry.pack(side=tk.LEFT, padx=10)
 
-        # 解鎖按鈕
+        # Unlock button
         self.unlock_button = ttk.Button(self.locker_frame, text=self.get_text("unlock_fridge"))
         self.unlock_button.pack(side=tk.LEFT, padx=10)
 
-        # 按鈕框架 - 使用更多的行來更好地組織按鈕
+        # Button frame - use more rows for better button organization
         self.button_frame = ttk.Frame(self.order_frame)
         self.button_frame.pack(fill=tk.X, pady=5)
         
-        # 基本訂單操作按鈕行
+        # Basic order operation buttons row
         self.basic_button_frame = ttk.Frame(self.button_frame)
         self.basic_button_frame.pack(fill=tk.X, pady=2)
 
@@ -693,7 +696,7 @@ class POSView:
         self.split_bill_button = ttk.Button(self.basic_button_frame, text=self.get_text("split_bill"))
         self.split_bill_button.pack(side=tk.LEFT, padx=5)
 
-        # VIP 功能按鈕行
+        # VIP feature buttons row
         self.vip_button_frame = ttk.Frame(self.button_frame)
         self.vip_button_frame.pack(fill=tk.X, pady=2)
 
@@ -706,30 +709,30 @@ class POSView:
         self.topup_button = ttk.Button(self.vip_button_frame, text=self.get_text("top_up"))
         self.topup_button.pack(side=tk.LEFT, padx=5)
 
-        # 登出按鈕行
+        # Logout button row
         self.logout_frame = ttk.Frame(self.button_frame)
         self.logout_frame.pack(fill=tk.X, pady=2)
 
         self.logout_button = ttk.Button(self.logout_frame, text=self.get_text("logout"))
         self.logout_button.pack(side=tk.LEFT, padx=5)
 
-        # 用來儲存菜單項目部件的字典
+        # Dictionary to store menu item widgets
         self.menu_item_widgets = {}
 
-        # 設置右鍵選單綁定
+        # Set right-click context menu binding
         self.order_tree.bind("<Button-3>", self.show_order_context_menu)
 
-        # 綁定窗口大小變化事件
+        # Bind window resize event
         self.root.bind("<Configure>", self.on_window_resize)
 
-        # 設置最大菜單列數
-        self.max_menu_cols = 3  # 桌面默認為 3 列
+        # Set maximum menu columns
+        self.max_menu_cols = 3  # Default to 3 columns for desktop
 
     def get_text(self, key):
         """獲取當前語言的文本"""
         if key in LANGUAGES[self.current_lang]:
             return LANGUAGES[self.current_lang][key]
-        # 對於嵌套字典的處理
+        # Handle nested dictionary keys
         if isinstance(key, str) and "." in key:
             parts = key.split(".")
             current = LANGUAGES[self.current_lang]
@@ -738,149 +741,149 @@ class POSView:
                     current = current[part]
                 else:
                     return key
-            return current
+                return current
         return key
 
     def change_language(self, selected_lang):
-        """切換語言並更新 UI"""
-        self.current_lang = selected_lang
+            """Switch language and update the UI"""
+            self.current_lang = selected_lang
 
-        # 更新主要界面元素的文本
-        self.menu_label.config(text=self.get_text("menu"))
-        self.order_label.config(text=self.get_text("current_order"))
-        self.label_choose_language.config(text=self.get_text("choose_language"))
+            # Update main interface elements' text
+            self.menu_label.config(text=self.get_text("menu"))
+            self.order_label.config(text=self.get_text("current_order"))
+            self.label_choose_language.config(text=self.get_text("choose_language"))
 
-        # 更新訂單控制區域文本
-        self.table_text.config(text=f"{self.get_text('table_number')}:")
-        self.person_text.config(text=f"{self.get_text('persons')}:")
-        self.choose_person_text.config(text=f"{self.get_text('choose_person')}:")
+            # Update order control area text
+            self.table_text.config(text=f"{self.get_text('table_number')}:")
+            self.person_text.config(text=f"{self.get_text('persons')}:")
+            self.choose_person_text.config(text=f"{self.get_text('choose_person')}:")
 
-        # 更新拖放區域文本
-        self.drop_frame.config(text=self.get_text("drop_items_here"))
-        self.drop_label.config(text=self.get_text("drag_hint"))
+            # Update drag-and-drop area text
+            self.drop_frame.config(text=self.get_text("drop_items_here"))
+            self.drop_label.config(text=self.get_text("drag_hint"))
 
-        # 更新訂單表格標題
-        self.order_tree.heading('Name', text=self.get_text("order_table")["name"])
-        self.order_tree.heading('Quantity', text=self.get_text("order_table")["quantity"])
-        self.order_tree.heading('Price', text=self.get_text("order_table")["price"])
+            # Update order table headers
+            self.order_tree.heading('Name', text=self.get_text("order_table")["name"])
+            self.order_tree.heading('Quantity', text=self.get_text("order_table")["quantity"])
+            self.order_tree.heading('Price', text=self.get_text("order_table")["price"])
 
-        # 更新訂單頁籤文本
-        self.order_notebook.tab(0, text=self.get_text("total_order"))
+            # Update order tab text
+            self.order_notebook.tab(0, text=self.get_text("total_order"))
 
-        # 更新個人訂單頁籤文本
-        for i, (person_name, tab_data) in enumerate(self.individual_trees.items()):
-            new_name = f"{self.get_text('person')} {i+1}"
-            self.order_notebook.tab(tab_data['frame'], text=new_name)
-            if 'drop_frame' in tab_data:
-                tab_data['drop_frame'].config(text=f"{self.get_text('drop_items_here')} - {new_name}")
+            # Update individual order tab text
+            for i, (person_name, tab_data) in enumerate(self.individual_trees.items()):
+                new_name = f"{self.get_text('person')} {i+1}"
+                self.order_notebook.tab(tab_data['frame'], text=new_name)
+                if 'drop_frame' in tab_data:
+                    tab_data['drop_frame'].config(text=f"{self.get_text('drop_items_here')} - {new_name}")
 
-            # 更新個人訂單表格標題
-            tab_data['tree'].heading('Name', text=self.get_text("order_table")["name"])
-            tab_data['tree'].heading('Quantity', text=self.get_text("order_table")["quantity"])
-            tab_data['tree'].heading('Price', text=self.get_text("order_table")["price"])
+                # Update individual order table headers
+                tab_data['tree'].heading('Name', text=self.get_text("order_table")["name"])
+                tab_data['tree'].heading('Quantity', text=self.get_text("order_table")["quantity"])
+                tab_data['tree'].heading('Price', text=self.get_text("order_table")["price"])
 
-        # 更新總計標籤 - 保留當前金額
-        current_total = self.total_label.cget("text").split("$")[1]
-        self.total_label.config(text=f"{self.get_text('total')}: ${current_total}")
+            # Update total label - retain the current amount
+            current_total = self.total_label.cget("text").split("$")[1]
+            self.total_label.config(text=f"{self.get_text('total')}: ${current_total}")
 
-        # 更新鎖櫃相關元素
-        self.locker_code_label.config(text=f"{self.get_text('locker_code')}: {self.get_text('hidden')}")
-        self.unlock_button.config(text=self.get_text("unlock_fridge"))
+            # Update locker-related elements
+            self.locker_code_label.config(text=f"{self.get_text('locker_code')}: {self.get_text('hidden')}")
+            self.unlock_button.config(text=self.get_text("unlock_fridge"))
 
-        # 更新按鈕文本
-        self.clear_button.config(text=self.get_text("clear_order"))
-        self.checkout_button.config(text=self.get_text("checkout"))
-        self.split_bill_button.config(text=self.get_text("split_bill"))
-        self.vip_balance_button.config(text=self.get_text("show_vip_balance"))
-        self.pay_from_account_button.config(text=self.get_text("pay_from_account"))
-        self.topup_button.config(text=self.get_text("top_up"))
-        self.logout_button.config(text=self.get_text("logout"))
+            # Update button text
+            self.clear_button.config(text=self.get_text("clear_order"))
+            self.checkout_button.config(text=self.get_text("checkout"))
+            self.split_bill_button.config(text=self.get_text("split_bill"))
+            self.vip_balance_button.config(text=self.get_text("show_vip_balance"))
+            self.pay_from_account_button.config(text=self.get_text("pay_from_account"))
+            self.topup_button.config(text=self.get_text("top_up"))
+            self.logout_button.config(text=self.get_text("logout"))
 
-        # 更新菜單類別按鈕
-        self.update_menu_categories()
+            # Update menu category buttons
+            self.update_menu_categories()
 
-        # 更新語言選單
-        self.update_language_menu()
-   
+            # Update language dropdown menu
+            self.update_language_menu()
+       
     def update_language_menu(self):
-        """更新語言選擇下拉選單"""
-        menu = self.language_menu["menu"]
-        menu.delete(0, "end")  # 先清除舊選項
-        
-        for lang in LANGUAGES.keys():
-            menu.add_command(label=lang,
-                          command=lambda value=lang: self.language_var.set(value) or self.change_language(value))
+            """Update the language selection dropdown menu"""
+            menu = self.language_menu["menu"]
+            menu.delete(0, "end")  # Clear old options
+            
+            for lang in LANGUAGES.keys():
+                menu.add_command(label=lang,
+                    command=lambda value=lang: self.language_var.set(value) or self.change_language(value))
 
     def update_menu_categories(self):
-        """更新菜單類別按鈕文本"""
-        # 全部類別按鈕特殊處理
-        if "All" in self.category_buttons:
-            self.category_buttons["All"].config(text=self.get_text("all"))
+            """Update the text of menu category buttons"""
+            # Special handling for the "All" category button
+            if "All" in self.category_buttons:
+                self.category_buttons["All"].config(text=self.get_text("all"))
 
-        # 其他類別按鈕
-        for category, button in self.category_buttons.items():
-            if category != "All":
-                translated = self.model.get_translated_category(category, self.current_lang)
-                button.config(text=translated)
+            # Other category buttons
+            for category, button in self.category_buttons.items():
+                if category != "All":
+                    translated = self.model.get_translated_category(category, self.current_lang)
+                    button.config(text=translated)
 
     def update_locker_code(self, code):
-        """更新鎖櫃密碼顯示 - 在開發模式下顯示密碼，方便測試"""
-        print(f"Locker Code: {code}")
-        # 生產環境可以移除這個顯示
+            """Update the locker code display - for development mode, show the code for testing"""
+            print(f"Locker Code: {code}")
+            # This display can be removed in production
 
     def show_order_context_menu(self, event):
-        """顯示訂單項目的右鍵選單"""
-        # 獲取點擊的項目
-        item_id = self.order_tree.identify_row(event.y)
-        if item_id:
-            # 選中被點擊的項目
-            self.order_tree.selection_set(item_id)
+            """Show the right-click context menu for order items"""
+            # Get the clicked item
+            item_id = self.order_tree.identify_row(event.y)
+            if item_id:
+                # Select the clicked item
+                self.order_tree.selection_set(item_id)
 
-            # 創建右鍵選單
-            context_menu = tk.Menu(self.root, tearoff=0)
-            context_menu.add_command(
+                # Create the right-click menu
+                context_menu = tk.Menu(self.root, tearoff=0)
+                context_menu.add_command(
                 label=self.get_text("delete_item"),
                 command=lambda: self.on_delete_item(item_id)
-            )
-            context_menu.add_command(
-                label=self.get_text("decrease_quantity"),
-                command=lambda: self.on_decrease_quantity(item_id)
-            )
+                )
+                context_menu.add_command(
+                    label=self.get_text("decrease_quantity"),
+                    command=lambda: self.on_decrease_quantity(item_id)
+                )
 
-            # 顯示選單
-            context_menu.post(event.x_root, event.y_root)
+                # Display the context menu
+                context_menu.post(event.x_root, event.y_root)
 
     def on_delete_item(self, item_id):
-        """從訂單中刪除項目的回調"""
+        """Callback to delete an item from the order"""
         if item_id:
-            # 獲取項目名稱
+            # Get the item name
             item_name = self.order_tree.item(item_id, 'values')[0]
 
-            # 通過回調通知控制器
+            # Notify the controller via callback
             if hasattr(self, 'on_remove_item_callback'):
-                # 決定是刪除總訂單還是個人訂單中的項目，基於當前顯示的頁籤
+                # Decide whether to delete from the main order or an individual order based on the current tab
                 current_tab = self.order_notebook.select()
 
                 if current_tab == str(self.total_order_frame):
-                    # 總訂單頁面
+                    # Main order tab
                     self.on_remove_item_callback(item_name)
                 else:
-                    # 個人訂單頁面
+                    # Individual order tab
                     for idx, (tab_name, tab_data) in enumerate(self.individual_trees.items()):
                         if current_tab == str(tab_data['frame']):
                             self.on_remove_item_callback(item_name, idx)
                             break
 
     def on_decrease_quantity(self, item_id):
-        """減少訂單項目數量的回調"""
+        """Callback to decrease the quantity of an item in the order"""
         if item_id:
-            # 獲取項目名稱和當前數量
+            # Get the item name and current quantity
             values = self.order_tree.item(item_id, 'values')
             item_name = values[0]
             current_qty = int(values[1])
 
             if current_qty > 1:
-                # 通過回調通知控制器來減少數量
+                # Notify the controller via callback to decrease the quantity
                 if hasattr(self, 'on_decrease_quantity_callback'):
                     current_tab = self.order_notebook.select()
 
@@ -892,16 +895,16 @@ class POSView:
                                 self.on_decrease_quantity_callback(item_name, idx)
                                 break
             else:
-                # 如果數量為 1，直接刪除
+                # If the quantity is 1, directly delete the item
                 self.on_delete_item(item_id)
 
     def on_window_resize(self, event):
-        """處理窗口大小變化以應用響應式佈局"""
-        # 只處理來自根窗口的事件，而非子部件
+        """Handle window resizing to apply responsive layouts"""
+        # Only handle events from the root window, not child widgets
         if event.widget == self.root:
             width = event.width
 
-            # 根據窗口寬度決定佈局
+            # Determine the layout based on the window width
             if width < self.breakpoints["mobile"] and self.current_layout != "mobile":
                 self.apply_mobile_layout()
                 self.current_layout = "mobile"
@@ -912,203 +915,203 @@ class POSView:
                 self.apply_desktop_layout()
                 self.current_layout = "desktop"
 
-            # 使用當前類別重建菜單
+            # Rebuild the menu using the current category
             current_category = self.selected_category.get()
             self.root.after(100, lambda: self.rebuild_menu_after_resize(current_category))
 
     def apply_mobile_layout(self):
-        """應用手機佈局"""
-        # 重新配置網格以垂直堆疊菜單和訂單部分
-        self.root.grid_columnconfigure(0, weight=1)  # 全寬
-        self.root.grid_columnconfigure(1, weight=1)  # 隱藏/折疊
+        """Apply mobile layout"""
+        # Reconfigure the grid to stack menu and order sections vertically
+        self.root.grid_columnconfigure(0, weight=1)  # Full width
+        self.root.grid_columnconfigure(1, weight=1)  # Hidden/collapsed
 
-        # 將訂單框架移到菜單框架下方
+        # Move the order frame below the menu frame
         self.order_frame.grid_forget()
         self.order_frame.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
 
-        # 減小類別按鈕大小並調整內邊距
+        # Reduce category button size and adjust padding
         for cat_btn in self.category_buttons.values():
             cat_btn.configure(padding=(2, 1))
 
-        # 調整菜單項目使用較少的列
-        self.max_menu_cols = 2  # 手機模式 2 列
+        # Adjust menu items to use fewer columns
+        self.max_menu_cols = 2  # Mobile mode: 2 columns
 
-        # 調整字體大小
+        # Adjust font sizes
         self.menu_label.configure(font=('Arial', 14, 'bold'))
         self.order_label.configure(font=('Arial', 14, 'bold'))
         self.total_label.configure(font=('Arial', 12))
 
-        # 讓訂單控制更緊湊
+        # Make order controls more compact
         self.table_number.configure(width=3)
         self.person_spinbox.configure(width=3)
 
-        # 調整樹狀視圖高度
+        # Adjust treeview height
         self.order_tree.configure(height=4)
         for person_data in self.individual_trees.values():
             if 'tree' in person_data:
                 person_data['tree'].configure(height=4)
 
-        # 調整拖放區域大小
+        # Adjust drop area size
         self.drop_frame.pack(fill=tk.X, padx=5, pady=3, ipady=5)
         self.drop_label.pack(pady=10)
 
-        # 堆疊 VIP 相關配置
+        # Stack VIP-related configurations
         self.locker_frame.pack_forget()
         self.locker_frame.pack(fill=tk.X, pady=2)
 
-        # 調整 VIP 相關元素大小
+        # Adjust VIP-related element sizes
         self.locker_code_label.configure(font=('Arial', 10))
         self.unlock_entry.configure(width=4)
 
-        # 重新排列按鈕
-        # 基本訂單操作按鈕
+        # Rearrange buttons
+        # Basic order operation buttons
         for button in [self.clear_button, self.checkout_button, self.split_bill_button]:
             button.pack_forget()
             button.pack(fill=tk.X, padx=2, pady=2)
 
-        # VIP 功能按鈕
+        # VIP feature buttons
         for button in [self.vip_balance_button, self.pay_from_account_button, self.topup_button]:
             button.pack_forget()
             button.pack(fill=tk.X, padx=2, pady=2)
 
-        # 登出按鈕
+        # Logout button
         self.logout_button.pack_forget()
         self.logout_button.pack(fill=tk.X, padx=2, pady=2)
 
-        # 確保滾動條保持功能
-        self.menu_canvas.configure(height=200)  # 菜單區域固定高度
+        # Ensure scrollbar remains functional
+        self.menu_canvas.configure(height=200)  # Fixed height for menu area
 
     def apply_tablet_layout(self):
-        """應用平板佈局"""
-        # 恢復水平佈局但調整比例
-        self.root.grid_columnconfigure(0, weight=2)  # 菜單佔 2/3
-        self.root.grid_columnconfigure(1, weight=1)  # 訂單佔 1/3
+        """Apply tablet layout"""
+        # Restore horizontal layout but adjust proportions
+        self.root.grid_columnconfigure(0, weight=2)  # Menu takes 2/3
+        self.root.grid_columnconfigure(1, weight=1)  # Order takes 1/3
 
-        # 將訂單框架移回側面
+        # Move the order frame back to the side
         self.order_frame.grid_forget()
         self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        # 調整類別按鈕
+        # Adjust category buttons
         for cat_btn in self.category_buttons.values():
             cat_btn.configure(padding=(4, 2))
 
-        # 調整菜單項目使用中等數量的列
-        self.max_menu_cols = 2  # 平板模式 2 列
+        # Adjust menu items to use a moderate number of columns
+        self.max_menu_cols = 2  # Tablet mode: 2 columns
 
-        # 恢復字體大小
+        # Restore font sizes
         self.menu_label.configure(font=('Arial', 16, 'bold'))
         self.order_label.configure(font=('Arial', 16, 'bold'))
         self.total_label.configure(font=('Arial', 14))
 
-        # 恢復輸入框大小
+        # Restore input field sizes
         self.table_number.configure(width=5)
         self.person_spinbox.configure(width=5)
 
-        # 調整 VIP 相關元素大小
+        # Adjust VIP-related element sizes
         self.locker_code_label.configure(font=('Arial', 12))
         self.unlock_entry.configure(width=6)
 
-        # 恢復拖放區域大小
+        # Restore drop area size
         self.drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
         self.drop_label.pack(pady=20)
 
-        # 重新排列按鈕 - 基本訂單按鈕水平排列
+        # Rearrange buttons - basic order buttons in a horizontal layout
         for button in [self.clear_button, self.checkout_button, self.split_bill_button]:
             button.pack_forget()
         self.clear_button.pack(side=tk.LEFT, padx=3)
         self.checkout_button.pack(side=tk.LEFT, padx=3)
         self.split_bill_button.pack(side=tk.LEFT, padx=3)
 
-        # VIP 功能按鈕水平排列
+        # VIP feature buttons in a horizontal layout
         for button in [self.vip_balance_button, self.pay_from_account_button, self.topup_button]:
             button.pack_forget()
         self.vip_balance_button.pack(side=tk.LEFT, padx=3)
         self.pay_from_account_button.pack(side=tk.LEFT, padx=3)
         self.topup_button.pack(side=tk.LEFT, padx=3)
 
-        # 登出按鈕
+        # Logout button
         self.logout_button.pack_forget()
         self.logout_button.pack(side=tk.LEFT, padx=3)
 
-        # 調整畫布以適當展開
-        self.menu_canvas.configure(height=0)  # 讓其自然展開
+        # Adjust canvas to expand appropriately
+        self.menu_canvas.configure(height=0)  # Let it expand naturally
 
     def apply_desktop_layout(self):
-        """應用桌面佈局"""
-        # 原始桌面比例
-        self.root.grid_columnconfigure(0, weight=4)  # 菜單佔 4/5
-        self.root.grid_columnconfigure(1, weight=1)  # 訂單佔 1/5
+        """Apply desktop layout"""
+        # Original desktop proportions
+        self.root.grid_columnconfigure(0, weight=4)  # Menu takes 4/5
+        self.root.grid_columnconfigure(1, weight=1)  # Order takes 1/5
 
-        # 確保訂單框架在正確位置
+        # Ensure the order frame is in the correct position
         self.order_frame.grid_forget()
         self.order_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
 
-        # 類別按鈕全尺寸
+        # Full-size category buttons
         for cat_btn in self.category_buttons.values():
             cat_btn.configure(padding=(5, 3))
 
-        # 使用菜單項目的最大列數
-        self.max_menu_cols = 3  # 桌面 3 列
+        # Use the maximum number of columns for menu items
+        self.max_menu_cols = 3  # Desktop: 3 columns
 
-        # 標準字體大小
+        # Standard font sizes
         self.menu_label.configure(font=('Arial', 16, 'bold'))
         self.order_label.configure(font=('Arial', 16, 'bold'))
         self.total_label.configure(font=('Arial', 14))
 
-        # 標準輸入框大小
+        # Standard input field sizes
         self.table_number.configure(width=5)
         self.person_spinbox.configure(width=5)
 
-        # 標準 VIP 相關元素大小
+        # Standard VIP-related element sizes
         self.locker_code_label.configure(font=('Arial', 12))
         self.unlock_entry.configure(width=6)
 
-        # 標準拖放區域大小
+        # Standard drop area size
         self.drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
         self.drop_label.pack(pady=20)
 
-        # 標準按鈕佈局
-        # 基本訂單按鈕
+        # Standard button layout
+        # Basic order buttons
         for button in [self.clear_button, self.checkout_button, self.split_bill_button]:
             button.pack_forget()
         self.clear_button.pack(side=tk.LEFT, padx=5)
         self.checkout_button.pack(side=tk.LEFT, padx=5)
         self.split_bill_button.pack(side=tk.LEFT, padx=5)
 
-        # VIP 功能按鈕
+        # VIP feature buttons
         for button in [self.vip_balance_button, self.pay_from_account_button, self.topup_button]:
             button.pack_forget()
         self.vip_balance_button.pack(side=tk.LEFT, padx=5)
         self.pay_from_account_button.pack(side=tk.LEFT, padx=5)
         self.topup_button.pack(side=tk.LEFT, padx=5)
 
-        # 登出按鈕
+        # Logout button
         self.logout_button.pack_forget()
         self.logout_button.pack(side=tk.LEFT, padx=5)
 
-        # 菜單區域完全展開
+        # Fully expand the menu area
         self.menu_canvas.configure(height=0)
 
     def rebuild_menu_after_resize(self, category):
-        """在視窗大小變化後使用當前類別重建菜單"""
-        # 儲存當前類別
+        """Rebuild the menu using the current category after window resize"""
+        # Save the current category
         old_category = self.selected_category.get()
         
-        # 設置類別 (若不同則觸發重建)
+        # Set the category (trigger rebuild if different)
         if category != old_category:
             self.selected_category.set(category)
         else:
-            # 若類別相同，需要手動觸發重建
+            # If the category is the same, manually trigger rebuild
             if hasattr(self, 'on_category_change_callback'):
                 self.on_category_change_callback()
     
     def create_menu_items(self, items, categories):
-        """創建可拖放的菜單項目部件，提高易用性與響應式設計"""
-        # 清除現有部件
+        """Create draggable menu item widgets for better usability and responsive design"""
+        # Clear existing widgets
         for widget in self.menu_scrollable_frame.winfo_children():
             widget.destroy()
         
-        # 清除現有類別按鈕
+        # Clear existing category buttons
         for widget in self.categories_row1.winfo_children():
             widget.destroy()
         for widget in self.categories_row2.winfo_children():
@@ -1116,51 +1119,51 @@ class POSView:
         
         self.category_buttons = {}
         
-        # 首先在第一行添加"全部"類別
+        # Add the "All" category to the first row
         all_btn = ttk.Radiobutton(self.categories_row1, text=self.get_text("all"), value="All",
                                 variable=self.selected_category)
         all_btn.pack(side=tk.LEFT, padx=5)
         self.category_buttons["All"] = all_btn
         
-        # 將類別平均分配到兩行
+        # Distribute categories evenly across two rows
         total_categories = len(categories)
         half_categories = total_categories // 2 + (1 if total_categories % 2 != 0 else 0)
         
-        # 將前半部分類別添加到第一行
+        # Add the first half of categories to the first row
         for i, category in enumerate(categories[:half_categories]):
-            # 使用翻譯後的類別名稱
+            # Use translated category names
             translated_cat = self.model.get_translated_category(category, self.current_lang)
             cat_btn = ttk.Radiobutton(self.categories_row1, text=translated_cat, value=category,
                                     variable=self.selected_category)
             cat_btn.pack(side=tk.LEFT, padx=5)
             self.category_buttons[category] = cat_btn
         
-        # 將後半部分類別添加到第二行
+        # Add the second half of categories to the second row
         for category in categories[half_categories:]:
-            # 使用翻譯後的類別名稱
+            # Use translated category names
             translated_cat = self.model.get_translated_category(category, self.current_lang)
             cat_btn = ttk.Radiobutton(self.categories_row2, text=translated_cat, value=category,
                                     variable=self.selected_category)
             cat_btn.pack(side=tk.LEFT, padx=5)
             self.category_buttons[category] = cat_btn
         
-        # 創建菜單項目
+        # Create menu items
         current_category = self.selected_category.get()
 
-        # 根據當前佈局確定列數
-        max_cols = getattr(self, 'max_menu_cols', 3)  # 若未設置默認為 3
+        # Determine the number of columns based on the current layout
+        max_cols = getattr(self, 'max_menu_cols', 3)  # Default to 3 if not set
 
         row = 0
         col = 0
         
-        # 若非選擇"全部"，則按所選類別過濾項目
+        # Filter items by the selected category if not "All"
         display_items = items if current_category == "All" else [item for item in items if item.category == current_category]
         
-        # 配置具有均勻分佈列的網格
+        # Configure grid with evenly distributed columns
         for i in range(max_cols):
             self.menu_scrollable_frame.columnconfigure(i, weight=1)
 
-        # 根據佈局調整項目大小
+        # Adjust item size based on layout
         if self.current_layout == "mobile":
             item_width = 100
             item_height = 60
@@ -1182,19 +1185,19 @@ class POSView:
                 col = 0
                 row += 1
                 
-            # 為每個菜單項目創建框架
+            # Create a frame for each menu item
             item_frame = ttk.Frame(self.menu_scrollable_frame, relief="raised", borderwidth=2)
             item_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             
-            # 根據佈局設置最小大小
+            # Set minimum size based on layout
             item_frame.columnconfigure(0, minsize=item_width)
             item_frame.rowconfigure(0, minsize=item_height)
             
-            # 在框架內創建容器以獲得更好的樣式
+            # Create an inner frame for better styling
             inner_frame = ttk.Frame(item_frame, padding=3)
             inner_frame.pack(fill=tk.BOTH, expand=True)
             
-            # 項目名稱和價格 - 根據佈局調整字體大小
+            # Item name and price - adjust font size based on layout
             name_label = ttk.Label(inner_frame, text=f"{item.name}",
                                  font=('Arial', font_size_name, 'bold'))
             name_label.pack(pady=(3, 0), fill=tk.BOTH, expand=True)
@@ -1203,45 +1206,45 @@ class POSView:
                                   font=('Arial', font_size_price))
             price_label.pack(pady=(0, 3), fill=tk.BOTH, expand=True)
             
-            # 在部件中儲存對項目的引用
+            # Store a reference to the item in the widget
             item_frame.item = item
             inner_frame.item = item
             name_label.item = item
             price_label.item = item
             
-            # 使所有元素可拖放
+            # Make all elements draggable
             for widget in [item_frame, inner_frame, name_label, price_label]:
                 widget.bind("<ButtonPress-1>", lambda e, i=item: self.on_drag_start(e, i))
                 widget.bind("<B1-Motion>", self.on_drag_motion)
                 widget.bind("<ButtonRelease-1>", self.on_drag_release)
             
-            # 儲存部件引用
+            # Store widget references
             self.menu_item_widgets[item.id] = item_frame
             
             col += 1
         
-        # 為響應式佈局配置網格權重
+        # Configure grid weights for responsive layout
         for i in range(max_cols):
             self.menu_scrollable_frame.columnconfigure(i, weight=1)
 
     def on_drag_start(self, event, item):
-        """開始拖放菜單項目"""
+        """Start dragging a menu item"""
         widget = event.widget
         widget._drag_start_x = event.x
         widget._drag_start_y = event.y
         widget._drag_item = item
         
-        # 創建拖放圖像
+        # Create drag-and-drop image
         self.drag_image = tk.Toplevel(self.root)
         self.drag_image.overrideredirect(True)
         self.drag_image.attributes('-topmost', True)
         self.drag_image.attributes('-alpha', 0.7)
         
-        # 創建更明顯的拖放圖像
+        # Create a more visible drag-and-drop image
         frame = ttk.Frame(self.drag_image, padding=10)
         frame.pack(fill=tk.BOTH, expand=True)
         
-        # 根據當前佈局調整拖放圖像的字體大小
+        # Adjust font size of drag-and-drop image based on current layout
         if self.current_layout == "mobile":
             font_size = 10
         else:
@@ -1251,29 +1254,29 @@ class POSView:
                         background='lightblue', font=('Arial', font_size, 'bold'), padding=10)
         label.pack(fill=tk.BOTH, expand=True)
         
-        # 將拖放圖像放置於指標位置
+        # Place the drag-and-drop image at the pointer location
         x, y = self.root.winfo_pointerxy()
         self.drag_image.geometry(f"+{x}+{y}")
         
-        # 高亮顯示拖放區域
+        # Highlight drop zones
         self.highlight_drop_zones(True)
 
     def on_drag_motion(self, event):
-        """處理拖放移動"""
+        """Handle drag-and-drop motion"""
         if hasattr(self, 'drag_image'):
             x, y = self.root.winfo_pointerxy()
             self.drag_image.geometry(f"+{x}+{y}")
 
     def on_drag_release(self, event):
-        """處理拖放釋放"""
+        """Handle drag-and-drop release"""
         if hasattr(self, 'drag_image'):
-            # 獲取當前位置
+            # Get current position
             x, y = self.root.winfo_pointerxy()
             
-            # 檢查是否在拖放區域上方
+            # Check if released over a drop zone
             drop_zone = None
             
-            # 檢查主拖放區域
+            # Check main drop zone
             drop_x = self.drop_frame.winfo_rootx()
             drop_y = self.drop_frame.winfo_rooty()
             drop_w = self.drop_frame.winfo_width()
@@ -1281,10 +1284,10 @@ class POSView:
             
             if (drop_x <= x <= drop_x + drop_w and 
                 drop_y <= y <= drop_y + drop_h):
-                # 主訂單拖放區域
+                # Main order drop zone
                 drop_zone = "main"
             
-            # 檢查個人頁籤（如果存在）
+            # Check individual tabs (if present)
             for person_idx, person_data in enumerate(self.individual_trees.values(), 1):
                 if self.order_notebook.select() == str(person_data['frame']):
                     person_drop = person_data.get('drop_frame')
@@ -1299,14 +1302,14 @@ class POSView:
                             drop_zone = f"person_{person_idx-1}"
                             break
             
-            # 銷毀拖放圖像
+            # Destroy drag-and-drop image
             self.drag_image.destroy()
             delattr(self, 'drag_image')
             
-            # 移除拖放區域高亮
+            # Remove drop zone highlights
             self.highlight_drop_zones(False)
             
-            # 如果在有效區域釋放，觸發添加項目
+            # If released in a valid zone, trigger item addition
             if drop_zone and hasattr(event.widget, '_drag_item'):
                 item = event.widget._drag_item
                 if drop_zone == "main":
@@ -1316,65 +1319,65 @@ class POSView:
                     self.on_drop(item, person_idx)
 
     def highlight_drop_zones(self, highlight=True):
-        """高亮或取消高亮拖放區域"""
+        """Highlight or unhighlight drop zones"""
         style = 'TLabelframe.Label'
         if highlight:
             self.root.option_add('*TLabelframe.Label.foreground', 'blue')
             self.drop_frame.configure(style='Highlight.TLabelframe')
-            # 高亮個人拖放區域（如果可見）
+            # Highlight individual drop zones (if visible)
             for person_data in self.individual_trees.values():
                 if 'drop_frame' in person_data:
                     person_data['drop_frame'].configure(style='Highlight.TLabelframe')
         else:
             self.root.option_add('*TLabelframe.Label.foreground', '')
             self.drop_frame.configure(style='TLabelframe')
-            # 移除個人拖放區域的高亮
+            # Remove highlight from individual drop zones
             for person_data in self.individual_trees.values():
                 if 'drop_frame' in person_data:
                     person_data['drop_frame'].configure(style='TLabelframe')
 
     def on_drop(self, item, person_idx=None):
-        """處理項目拖放到訂單"""
-        # 這將連接到控制器以添加項目
+        """Handle item drop into the order"""
+        # This will connect to the controller to add the item
         if hasattr(self, 'on_add_item_callback'):
             self.on_add_item_callback(item, person_idx)
 
     def set_on_add_item_callback(self, callback):
-        """設置添加項目到訂單的回調"""
+        """Set callback for adding items to the order"""
         self.on_add_item_callback = callback
 
     def set_on_remove_item_callback(self, callback):
-        """設置移除項目的回調"""
+        """Set callback for removing items"""
         self.on_remove_item_callback = callback
 
     def set_on_decrease_quantity_callback(self, callback):
-        """設置減少數量的回調"""
+        """Set callback for decreasing item quantity"""
         self.on_decrease_quantity_callback = callback
 
     def update_individual_tabs(self, num_people):
-        """更新個人訂單頁籤"""
-        # 移除現有個人頁面
+        """Update individual order tabs"""
+        # Remove existing individual pages
         for tab in list(self.individual_trees.keys()):
             if tab not in [f"Person {i+1}" for i in range(num_people)]:
                 self.order_notebook.forget(self.individual_trees[tab]['frame'])
                 del self.individual_trees[tab]
         
-        # 添加或更新個人頁面
+        # Add or update individual pages
         for i in range(num_people):
             person_name = f"Person {i+1}"
             translated_name = f"{self.get_text('person')} {i+1}"
 
             if person_name not in self.individual_trees:
-                # 創建新頁面
+                # Create new page
                 person_frame = ttk.Frame(self.order_notebook)
                 self.order_notebook.add(person_frame, text=translated_name)
                 
-                # 為該人員創建拖放區域
+                # Create drop zone for this person
                 person_drop_frame = ttk.LabelFrame(person_frame,
                                                  text=f"{self.get_text('drop_items_here')} - {translated_name}")
                 person_drop_frame.pack(fill=tk.X, padx=5, pady=5, ipady=10)
                 
-                # 根據當前佈局調整標籤大小
+                # Adjust label size based on current layout
                 if self.current_layout == "mobile":
                     font_size = 9
                 else:
@@ -1385,7 +1388,7 @@ class POSView:
                                            font=('Arial', font_size), foreground='gray')
                 person_drop_label.pack(pady=20)
                 
-                # 為該頁面創建樹狀視圖
+                # Create treeview for this page
                 person_tree = ttk.Treeview(person_frame, columns=('Name', 'Quantity', 'Price'), show='headings')
                 person_tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
                 
@@ -1393,7 +1396,7 @@ class POSView:
                 person_tree.heading('Quantity', text=self.get_text("order_table")["quantity"])
                 person_tree.heading('Price', text=self.get_text("order_table")["price"])
                 
-                # 根據佈局調整列寬
+                # Adjust column widths based on layout
                 if self.current_layout == "mobile":
                     person_tree.column('Name', width=80)
                     person_tree.column('Quantity', width=40)
@@ -1403,17 +1406,17 @@ class POSView:
                     person_tree.column('Quantity', width=80)
                     person_tree.column('Price', width=100)
 
-                # 保存引用
+                # Save references
                 self.individual_trees[person_name] = {
                     'frame': person_frame,
                     'tree': person_tree,
                     'drop_frame': person_drop_frame
                 }
-                # 綁定事件
+                # Bind events
                 person_tree.bind("<Button-3>", lambda e, t=person_tree, idx=i: self.show_individual_order_context_menu(e, t, idx))
 
     def show_individual_order_context_menu(self, event, tree, person_index):
-        """顯示個人訂單的右鍵選單"""
+        """Show context menu for individual orders"""
         item_id = tree.identify_row(event.y)
         if item_id:
             tree.selection_set(item_id)
@@ -1431,38 +1434,38 @@ class POSView:
             context_menu.post(event.x_root, event.y_root)
 
     def on_delete_individual_item(self, item_id, tree, person_index):
-        """刪除個人訂單中的項目"""
+        """Delete an item from an individual order"""
         if item_id:
             item_name = tree.item(item_id, 'values')[0]
-            # 通過回調通知控制器
+            # Notify the controller via callback
             if hasattr(self, 'on_remove_item_callback'):
                 self.on_remove_item_callback(item_name, person_index)
 
     def on_decrease_individual_quantity(self, item_id, tree, person_index):
-        """減少個人訂單中項目的數量"""
+        """Decrease the quantity of an item in an individual order"""
         if item_id:
-            # 獲取項目名稱和當前數量
+            # Get item name and current quantity
             values = tree.item(item_id, 'values')
             item_name = values[0]
             current_qty = int(values[1])
 
             if current_qty > 1:
-                # 通過回調通知控制器減少數量
+                # Notify the controller via callback to decrease quantity
                 if hasattr(self, 'on_decrease_quantity_callback'):
                     self.on_decrease_quantity_callback(item_name, person_index)
             else:
-                # 如果數量為 1，直接刪除
+                # If quantity is 1, directly delete the item
                 self.on_delete_individual_item(item_id, tree, person_index)
 
     def update_order_display(self, order_items, total, split_items=None):
-        """更新訂單顯示，包括總訂單和個人訂單"""
-        # 更新總訂單顯示
+        """Update order display, including total order and individual orders"""
+        # Update total order display
         for item in self.order_tree.get_children():
             self.order_tree.delete(item)
         for item, quantity in order_items:
             self.order_tree.insert('', 'end', values=(item.name, quantity, f"${item.price * quantity:.2f}"))
         
-        # 根據佈局調整總訂單列寬
+        # Adjust total order column widths based on layout
         if self.current_layout == "mobile":
             self.order_tree.column('Name', width=80)
             self.order_tree.column('Quantity', width=40)
@@ -1472,32 +1475,32 @@ class POSView:
             self.order_tree.column('Quantity', width=80)
             self.order_tree.column('Price', width=100)
 
-        # 如果有分帳信息，更新個人訂單顯示
+        # If split bill information is available, update individual order displays
         if split_items:
             for person_idx, (items, subtotal) in enumerate(split_items):
                 person_name = f"Person {person_idx+1}"
                 if person_name in self.individual_trees:
                     tree = self.individual_trees[person_name]['tree']
-                    # 清除現有項目
+                    # Clear existing items
                     for item in tree.get_children():
                         tree.delete(item)
-                    # 添加新項目
+                    # Add new items
                     for item, quantity in items:
                         tree.insert('', 'end', values=(item.name, quantity, f"${item.price * quantity:.2f}"))
         
         self.total_label.config(text=f"{self.get_text('total')}: ${total:.2f}")
 
     def show_message(self, message):
-        """顯示訊息對話框"""
+        """Display a message dialog"""
         messagebox.showinfo(self.get_text("information"), message)
 
     def display_split_bills(self, split_bills):
-        """顯示分帳視窗"""
-        # 創建響應式分帳視窗
+        """Display split bill window"""
+        # Create a responsive split bill window
         split_bill_window = tk.Toplevel(self.root)
         split_bill_window.title(self.get_text("split_bill"))
 
-        # 根據當前佈局調整大小
+        # Adjust size based on current layout
         if self.current_layout == "mobile":
             split_bill_window.geometry("400x500")
         else:
@@ -1518,12 +1521,12 @@ class POSView:
         main_canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # 子帳單
+        # Sub-bills
         for i, (items, subtotal) in enumerate(split_bills, 1):
             frame = ttk.LabelFrame(scrollable_frame, text=f"{self.get_text('person')} {i}")
             frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
             
-            if not items:  # 檢查是否有項目
+            if not items:  # Check if there are items
                 ttk.Label(frame, text=self.get_text("no_items")).pack(pady=10)
                 ttk.Label(frame, text=f"{self.get_text('subtotal')}: $0.00",
                         font=('Arial', 12 if self.current_layout != "mobile" else 11, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
@@ -1533,7 +1536,7 @@ class POSView:
                                     height=4 if self.current_layout == "mobile" else 5)
             bill_tree.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
             
-            # 添加水平滾動條
+            # Add horizontal scrollbar
             tree_scrollbar_x = ttk.Scrollbar(frame, orient="horizontal", command=bill_tree.xview)
             bill_tree.configure(xscrollcommand=tree_scrollbar_x.set)
             tree_scrollbar_x.pack(fill="x")
@@ -1542,7 +1545,7 @@ class POSView:
             bill_tree.heading('Quantity', text=self.get_text("order_table")["quantity"])
             bill_tree.heading('Price', text=self.get_text("order_table")["price"])
             
-            # 根據佈局設定列寬
+            # Set column widths based on layout
             if self.current_layout == "mobile":
                 bill_tree.column('Name', width=100, minwidth=80)
                 bill_tree.column('Quantity', width=60, minwidth=40)
@@ -1558,11 +1561,11 @@ class POSView:
             ttk.Label(frame, text=f"{self.get_text('subtotal')}: ${subtotal:.2f}",
                     font=('Arial', 12 if self.current_layout != "mobile" else 11, 'bold')).pack(anchor=tk.E, padx=10, pady=5)
         
-        # 添加列印和關閉按鈕
+        # Add print and close buttons
         button_frame = ttk.Frame(scrollable_frame)
         button_frame.pack(fill=tk.X, padx=10, pady=10)
         
-        # 根據當前顯示調整按鈕佈局
+        # Adjust button layout based on current display
         if self.current_layout == "mobile":
             ttk.Button(button_frame, text=self.get_text("print_bills"),
                     command=lambda: self.show_message(self.get_text("printing_bills"))).pack(fill=tk.X, padx=5, pady=2)
@@ -1583,12 +1586,12 @@ class POSController:
         self.current_order = Order()
         self.update_locker_code()
         
-        # 設置通過拖放添加項目的回調
+        # Set callbacks for adding items via drag-and-drop
         self.view.set_on_add_item_callback(self.add_to_order_drag_drop)
         self.view.set_on_remove_item_callback(self.remove_from_order)
         self.view.set_on_decrease_quantity_callback(self.decrease_item_quantity)
 
-        # 綁定事件
+        # Bind events
         self.view.clear_button.config(command=self.clear_order)
         self.view.checkout_button.config(command=self.checkout)
         self.view.split_bill_button.config(command=self.split_bill)
@@ -1601,60 +1604,60 @@ class POSController:
         self.view.topup_button.config(command=self.topup_account)
         self.view.logout_button.config(command=self.logout)
      
-        # 初始化訂單
+        # Initialize order
         self.reset_order()
         
-        # 初始化菜單顯示
+        # Initialize menu display
         self.initialize_menu()
 
-        # 更新人數選擇範圍
+        # Update person selection range
         self.update_person_spinbox_range()
 
-        # 設置類別更改的回調
+        # Set callback for category changes
         self.view.on_category_change_callback = self.on_category_change
     
     def remove_from_order(self, item_name, person_index=None):
-        """從訂單中移除項目"""
-        # 查找相應的菜單項目
+        """Remove an item from the order"""
+        # Find the corresponding menu item
         menu_items = self.model.get_menu_items()
         target_item = next((item for item in menu_items if item.name == item_name), None)
 
         if target_item:
-            # 從訂單中移除
+            # Remove from the order
             people_count = self.view.people_count.get()
 
             if people_count > 1 and person_index is not None:
-                # 從指定人員的訂單中移除
+                # Remove from the specified person's order
                 self.current_order.remove_item(target_item.id, sub_order_index=person_index)
             else:
-                # 從總訂單中移除
+                # Remove from the total order
                 self.current_order.remove_item(target_item.id)
 
-            # 更新顯示
+            # Update display
             self.update_all_displays()
 
     def decrease_item_quantity(self, item_name, person_index=None):
-        """減少訂單項目數量"""
-        # 查找相應的菜單項目
+        """Decrease the quantity of an item in the order"""
+        # Find the corresponding menu item
         menu_items = self.model.get_menu_items()
         target_item = next((item for item in menu_items if item.name == item_name), None)
 
         if target_item:
-            # 從訂單中減少數量（移除1）
+            # Decrease the quantity in the order (remove 1)
             people_count = self.view.people_count.get()
 
             if people_count > 1 and person_index is not None:
-                # 從指定人員的訂單中減少
+                # Decrease from the specified person's order
                 self.current_order.remove_item(target_item.id, quantity=1, sub_order_index=person_index)
             else:
-                # 從總訂單中減少
+                # Decrease from the total order
                 self.current_order.remove_item(target_item.id, quantity=1)
 
-            # 更新顯示
+            # Update the display
             self.update_all_displays()
 
     def unlock_fridge(self):
-        """驗證組合鎖密碼，正確則更新密碼"""
+        """Verify the combination lock code, update the code if correct"""
         code = self.view.unlock_entry.get()
         vip_account = self.model.vip_account
 
@@ -1666,34 +1669,34 @@ class POSController:
             if self.model.vip_account >= 20:
                 self.model.vip_account -= 20
                 self.view.show_message(self.view.get_text("unlocked").format(self.model.vip_account))
-                self.model.locker.update_code()  # 成功後變更密碼
-                self.update_locker_code()  # 更新顯示的新密碼
+                self.model.locker.update_code()  # Update the code after success
+                self.update_locker_code()  # Update the display with the new code
             else:
                 self.view.show_message(self.view.get_text("not_enough_balance").format(self.model.vip_account))
         else:
             self.view.show_message(self.view.get_text("wrong_code"))
 
     def update_locker_code(self):
-        """更新 UI 上的密碼顯示"""
+        """Update the locker code display in the UI"""
         new_code = self.model.locker.lock_code
         self.view.update_locker_code(new_code)
 
     def initialize_menu(self):
-        """初始化菜單與類別"""
+        """Initialize the menu and categories"""
         menu_items = self.model.get_menu_items()
         categories = sorted(set(item.category for item in menu_items))
         self.view.create_menu_items(menu_items, categories)
 
     def on_category_change(self, *args):
-        """處理類別變更"""
+        """Handle category change"""
         self.initialize_menu()
 
     def reset_order(self):
-        # 創建新的訂單實例
+        # Create a new order instance
         self.current_order = Order()
-        # 重置分頁顯示
+        # Reset the tab display
         self.view.update_individual_tabs(1)
-        # 更新所有顯示
+        # Update all displays
         self.update_all_displays()
 
     def add_person(self):
@@ -1702,9 +1705,9 @@ class POSController:
         self.update_person_spinbox_range()
         if len(self.current_order.sub_orders) < current_count + 1:
             self.current_order.sub_orders.append([])
-        # 更新訂單顯示分頁
+        # Update the order display tabs
         self.view.update_individual_tabs(current_count + 1)
-        # 更新所有訂單顯示
+        # Update all order displays
         self.update_all_displays()
 
     def remove_person(self):
@@ -1714,13 +1717,13 @@ class POSController:
             self.update_person_spinbox_range()
             if len(self.current_order.sub_orders) > current_count - 1:
                 self.current_order.sub_orders.pop()
-            # 更新訂單顯示分頁
+            # Update the order display tabs
             self.view.update_individual_tabs(current_count - 1)
-            # 更新所有訂單顯示
+            # Update all order displays
             self.update_all_displays()
 
     def update_all_displays(self):
-        """更新所有訂單顯示"""
+        """Update all order displays"""
         all_items = self.current_order.get_all_items()
         split_bills = self.current_order.get_split_bills()
         self.view.update_order_display(all_items, self.current_order.total, split_bills)        
@@ -1732,7 +1735,7 @@ class POSController:
             self.view.current_person.set(current_count)
 
     def add_to_order_drag_drop(self, menu_item, person_index=None):
-        """從拖放添加項目到訂單"""
+        """Add an item to the order via drag-and-drop"""
         if menu_item:
             people_count = self.view.people_count.get()
             if people_count > 1 and person_index is not None:
@@ -1756,7 +1759,7 @@ class POSController:
 
     def clear_order(self):
         self.reset_order()
-        self.view.people_count.set(1)  # 重置人數
+        self.view.people_count.set(1)  # Reset the number of people
         self.update_person_spinbox_range()
 
     def checkout(self):
@@ -1764,7 +1767,7 @@ class POSController:
             self.view.show_message(self.view.get_text("order_is_empty"))
             return
 
-        # 從視圖設置桌號
+        # Set the table number from the view
         self.current_order.table_number = self.view.table_number.get() if self.view.table_number.get() else None
         
         table_info = f" {self.view.get_text('for_table')} {self.current_order.table_number}" if self.current_order.table_number else ""
@@ -1774,7 +1777,7 @@ class POSController:
         self.clear_order()
 
     def vip_balance(self):
-        """檢查 VIP 餘額並顯示"""
+        """Check VIP balance and display it"""
         self.view.show_message(self.view.get_text("your_vip_balance").format(self.model.vip_account))
     
     def pay_from_account(self):
@@ -1795,48 +1798,47 @@ class POSController:
             self.view.show_message(self.view.get_text("insufficient_balance"))
 
     def topup_account(self):
-        """儲值 VIP 帳戶"""
+        """Top up VIP account"""
         amount = simpledialog.askinteger(
             self.view.get_text("top_up"),
             self.view.get_text("top_up_prompt"),
             minvalue=1
         )
         
-        if amount is not None:  # 確保用戶沒有點擊取消
-            self.model.vip_account += amount  # 增加餘額
+        if amount is not None:  # Ensure the user did not click cancel
+            self.model.vip_account += amount  # Increase balance
             messagebox.showinfo(
                 self.view.get_text("success"),
                 self.view.get_text("recharged").format(self.model.vip_account)
             )
 
     def logout(self):
-        """登出並回到登入介面"""
+        """Log out and return to the login interface"""
         confirm = messagebox.askyesno(
             self.view.get_text("logout"),
             self.view.get_text("confirm_logout")
         )
         if confirm:
-            self.root.quit()  # 結束 Tkinter 事件循環
-            self.root.destroy()  # 銷毀 Tkinter 主視窗
-            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # 啟動登入視窗
+            self.root.quit()  # End the Tkinter event loop
+            self.root.destroy()  # Destroy the Tkinter main window
+            subprocess.Popen([sys.executable, "login_interface.py"], start_new_session=True)  # Launch the login window
 
 # main
 def main():
     root = tk.Tk()
-    
-    # 創建高亮拖放區域的樣式
+    # Create a style for highlighting drop zones
     style = ttk.Style()
     style.configure("Highlight.TLabelframe", background="lightblue")
 
-    # 初始化模型、視圖和控制器
+    # Initialize the model, view, and controller
     model = MenuModel()
     view = POSView(root, model)
     controller = POSController(model, view)
 
-    # 設置視圖對控制器的引用
+    # Set the view's reference to the controller
     view.controller = controller
 
-    # 啟動主循環
+    # Start the main loop
     root.mainloop()
 
 if __name__ == "__main__":
