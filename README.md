@@ -23,7 +23,7 @@ ChatGPT and DeepSeek were used to help with this project. However, AI had diffic
 
 ## Time Reporting
 Cheng-Han,Shem
-- **Total time spent:** Approximately 20-24 hours
+- **Total time spent:** Approximately 30-35 hours
 - **User's contribution:**
   - Designed `login_interface`
   - Developed `vip_interface`
